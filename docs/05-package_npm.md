@@ -1,400 +1,360 @@
-# 第5章 包与npm
+# 浏览器同源政策及其规避方法
 
-## npm
 
-> 参考链接：
+
+## 一、概述
+
+### 1.1 含义
+
+1995年，同源政策由 Netscape 公司引入浏览器。目前，所有浏览器都实行这个政策。
+
+最初，它的含义是指，A网页设置的 Cookie，B网页不能打开，除非这两个网页"同源"。所谓"同源"指的是"三个相同"。
+
+> - 协议相同
+> - 域名相同
+> - 端口相同
+
+举例来说，`http://www.example.com/dir/page.html`这个网址，协议是`http://`，域名是`www.example.com`，端口是`80`（默认端口可以省略）。它的同源情况如下。
+
+> - `http://www.example.com/dir2/other.html`：同源
+> - `http://example.com/dir/other.html`：不同源（域名不同）
+> - `http://v2.www.example.com/dir/other.html`：不同源（域名不同）
+> - `http://www.example.com:81/dir/other.html`：不同源（端口不同）
+
+### 1.2 目的
+
+同源政策的目的，是为了保证用户信息的安全，防止恶意的网站窃取数据。
+
+设想这样一种情况：A网站是一家银行，用户登录以后，又去浏览其他网站。如果其他网站可以读取A网站的 Cookie，会发生什么？
+
+很显然，如果 Cookie 包含隐私（比如存款总额），这些信息就会泄漏。更可怕的是，Cookie 往往用来保存用户的登录状态，如果用户没有退出登录，其他网站就可以冒充用户，为所欲为。因为浏览器同时还规定，提交表单不受同源政策的限制。
+
+由此可见，"同源政策"是必需的，否则 Cookie 可以共享，互联网就毫无安全可言了。
+
+### 1.3 限制范围
+
+随着互联网的发展，"同源政策"越来越严格。目前，如果非同源，共有三种行为受到限制。
+
+> （1） Cookie、LocalStorage 和 IndexDB 无法读取。
 >
-> - https://docs.npmjs.com/getting-started/
-
-npm 全称 `Node Package Manager`，它的诞生是为了解决 Node 中第三方包共享的问题。
-和浏览器一样，由于都是 JavaScript，所以前端开发也使用 npm 作为第三方包管理工具。
-例如大名鼎鼎的 jQuery、Bootstrap 等都可以通过 npm 来安装。
-所以官方把 npm 定义为 `JavaScript Package Manager`。
-
-`npm` 有两层含义。一层含义是Node的开放式模块登记和管理系统，网址为[npmjs.org](http://npmjs.org/)。另一层含义是Node默认的模块管理器，是一个命令行下的软件，用来安装和管理Node模块。
-
-`npm`不需要单独安装。在安装Node的时候，会连带一起安装`npm`。
-
-执行下面的命令可以用来查看本地安装的 npm 的版本号。
-
-```bash
-npm --version
-```
-
-如果想升级 npm ，可以这样
-
-```bash
-npm install npm --global
-```
-
-
-
-## 常用命令
-
-> 表格
-
-```shell
-# 在项目中初始化一个 package.json 文件
-# 凡是使用 npm 来管理的项目都会有这么一个文件
-npm init
-
-# 跳过向导，快速生成 package.json 文件
-# 简写是 -y
-npm init --yes
-
-# 一次性安装 dependencies 中所有的依赖项
-# 简写是 npm i
-npm install
-
-# 安装指定的包，可以简写为 npm i 包名
-# npm 5 以前只下载，不会保存依赖信息，如果需要保存，则需要加上 `--save` 选项
-# npm 5 以后就可以省略 --save 选项了
-npm install 包名
-
-# 一次性安装多个指定包
-npm install 包名 包名 包名 ...
-
-# 安装指定版本的包
-npm install 包名@版本号
-
-# npm list命令以树型结构列出当前项目安装的所有模块，以及它们依赖的模块。
-npm list
-
-# 加上global参数，会列出全局安装的模块
-npm list -global
-
-# npm list命令也可以列出单个模块
-npm list 包名
-
-# 安装全局包
-npm install --global 包名
-
-# 更新本地安装的模块
-# 它会先到远程仓库查询最新版本，然后查询本地版本。如果本地版本不存在，或者远程版本较新，就会安装
-npm update [package name]
-
-# 升级全局安装的模块
-npm update -global [package name]
-
-# 卸载指定的包
-npm uninstall 包名
-
-# 查看包信息
-# view 别名：v、info、show
-npm view 包名
-
-# 查看使用帮助
-npm help
-
-# 查看某个命令的使用帮助
-# 例如我忘记了 uninstall 命令的简写了，这个时候，可以输入 `npm uninstall --help` 来查看使用帮助
-npm 命令 --help
-```
-
-## 全局命令行工具
-
-每个模块可以“全局安装”，也可以“本地安装”。“全局安装”指的是将一个模块安装到系统目录中，各个项目都可以调用。一般来说，全局安装只适用于工具模块，比如`eslint`和`gulp`。“本地安装”指的是将一个模块下载到当前项目的`node_modules`子目录，然后只有在项目目录之中，才能调用这个模块。
-
-> 提示：安装全局包必须加 `--global` 参数
-
-### http-server
-
-> https://github.com/indexzero/http-server#readme
-
-### nodemon
-
-> http://nodemon.io/
-
-### less
-
-> http://lesscss.org/
-
-### browser-sync
-
-> https://browsersync.io/
-
-
-
-## 切换 npm 镜像源
-
-- `npm install jquery --registry=https://registry.npm.taobao.org`
-- `npm config set registry https://registry.npm.taobao.org`
-- [nrm](https://github.com/Pana/nrm)
-
-npm 存储包文件的服务器在国外，有时候会被墙，速度很慢，所以我们需要解决这个问题。
-
-国内淘宝的开发团队把 npm 在国内做了一个备份，网址是：http://npm.taobao.org/。
-
-最简单的方式就是我们在安装包的时候告诉 npm 你去哪个服务器下载。
-
-例如使用淘宝的 npm 镜像源下载 jquery:
-
-```shell
-npm install jquery --registry=https://registry.npm.taobao.org
-```
-
-但是每次手动往后面加 `--registry=https://registry.npm.taobao.org` 很麻烦，
-所以我们可以通过修改配置文件的方式来处理解决。
-
-```shell
-# 配置到淘宝服务器
-npm config set registry https://registry.npm.taobao.org
-
-# 查看 registry 是否配置正确
-npm config get registry
-```
-
-只要经过了上面命令的配置，则你以后所有的 `npm install` 都会使用你配置的 `registry` 下载。
-
-
-
-## package.json
-
-每个项目的根目录下面，一般都有一个`package.json`文件，定义了这个项目所需要的各种模块，以及项目的配置信息（比如名称、版本、许可证等元数据）。`npm install`命令根据这个配置文件，自动下载所需的模块，也就是配置项目所需的运行和开发环境。
-
-package.json文件可以手工编写，也可以使用`npm init`命令自动生成。
-
-```bash
-npm init
-```
-
-这个命令采用互动方式，要求用户回答一些问题，然后在当前目录生成一个基本的package.json文件。所有问题之中，只有项目名称（name）和项目版本（version）是必填的，其他都是选填的。
-
-这个文件可以通过 `npm init` 的方式来自动初始化出来。
-
-
-
-下面是一个最简单的package.json文件，只定义两项元数据：项目名称和项目版本。
-
-```json
-{
-  "name" : "xxx",
-  "version" : "0.0.0",
-}
-
-```
-
-`package.json`文件就是一个JSON对象，该对象的每一个成员就是当前项目的一项设置。比如`name`就是项目名称，`version`是版本（遵守“大版本.次要版本.小版本”的格式）。
-
-下面是一个更完整的package.json文件。
-
-```json
-{
-	"name": "Hello World",
-	"version": "0.0.1",
-	"author": "张三",
-	"description": "第一个node.js程序",
-	"keywords":["node.js","javascript"],
-	"repository": {
-		"type": "git",
-		"url": "https://path/to/url"
-	},
-	"license":"MIT",
-	"engines": {"node": "0.10.x"},
-	"bugs":{"url":"http://path/to/bug","email":"bug@example.com"},
-	"contributors":[{"name":"李四","email":"lisi@example.com"}],
-	"scripts": {
-		"start": "node index.js"
-	},
-	"dependencies": {
-		"express": "latest",
-		"mongoose": "~3.8.3",
-		"handlebars-runtime": "~1.0.12",
-		"express3-handlebars": "~0.5.0",
-		"MD5": "~1.2.0"
-	},
-	"devDependencies": {
-		"bower": "~1.2.8",
-		"grunt": "~0.4.1",
-		"grunt-contrib-concat": "~0.3.0",
-		"grunt-contrib-jshint": "~0.7.2",
-		"grunt-contrib-uglify": "~0.2.7",
-		"grunt-contrib-clean": "~0.5.0",
-		"browserify": "2.36.1",
-		"grunt-browserify": "~1.3.0",
-	}
-}
-
-```
-
-下面详细解释package.json文件的各个字段。
-
-### dependencies
-
-`dependencies`字段指定了项目运行所依赖的模块，`devDependencies`指定项目开发所需要的模块。
-
-它们都指向一个对象。该对象的各个成员，分别由模块名和对应的版本要求组成，表示依赖的模块及其版本范围。
-
-```json
-{
-  "devDependencies": {
-    "browserify": "~13.0.0",
-    "karma-browserify": "~5.0.1"
-  }
-}
-
-```
-
-对应的版本可以加上各种限定，主要有以下几种：
-
-- **指定版本**：比如`1.2.2`，遵循“大版本.次要版本.小版本”的格式规定，安装时只安装指定版本。
-- **波浪号（tilde）+指定版本**：比如`~1.2.2`，表示安装1.2.x的最新版本（不低于1.2.2），但是不安装1.3.x，也就是说安装时不改变大版本号和次要版本号。
-- **插入号（caret）+指定版本**：比如ˆ1.2.2，表示安装1.x.x的最新版本（不低于1.2.2），但是不安装2.x.x，也就是说安装时不改变大版本号。需要注意的是，如果大版本号为0，则插入号的行为与波浪号相同，这是因为此时处于开发阶段，即使是次要版本号变动，也可能带来程序的不兼容。
-- **latest**：安装最新版本。
-
-### main
-
-`main`字段指定了加载的入口文件，`require('moduleName')`就会加载这个文件。这个字段的默认值是模块根目录下面的`index.js`。
-
-### scripts
-
-`scripts`指定了运行脚本命令的npm命令行缩写，比如start指定了运行`npm run start`时，所要执行的命令。
-
-下面的设置指定了`npm run preinstall`、`npm run postinstall`、`npm run start`、`npm run test`时，所要执行的命令。
-
-```json
-"scripts": {
-    "preinstall": "echo here it comes!",
-    "postinstall": "echo there it goes!",
-    "start": "node index.js",
-    "test": "tap test/*.js"
-}
-
-```
-
-> 扩展阅读：[npm scripts 使用指南](http://www.ruanyifeng.com/blog/2016/10/npm_scripts.html)
-
-## package-lock.json
-
-npm 5 以前是不会有 `package-lock.json` 这个文件的。（被开发者诟病，吐槽的问题）。
-
-以前会自作多情的自动给你升级。
-
-npm 5 以后才加入了这个文件。
-
-当你安装包的时候，npm 都会生成或者更新 `package-lock.json` 这个文件。
-
-- npm 5 以后的版本安装包不需要加 `--save` 参数，它会自动保存依赖信息
-- 当你安装包的时候，会自动创建或者是更新 `package-lock.json` 这个文件
-- `package-lock.json` 这个文件会保存 `node_modules` 中所有包的信息（版本、下载地址）
-  - 这样的话重新 `npm install` 的时候速度就可以提升
-- 从文件来看，有一个 `lock` 称之为锁
-  - 这个 `lock` 是用来锁定版本的
-  - 如果项目依赖了 `1.1.1` 版本
-  - 如果你重新 isntall 其实会下载最新版本，而不是 1.1.1
-  - 我们的目的就是希望可以锁住 1.1.1 这个版本
-  - 所以这个 `package-lock.json` 这个文件的另一个作用就是锁定版本号，防止自动升级新版
-
-## npx
-
-> 参考链接：
+> （2） DOM 无法获得。
 >
-> - http://www.ruanyifeng.com/blog/2019/02/npx.html
-> - https://github.com/zkat/npx
-> - https://www.jianshu.com/p/cee806439865
+> （3） AJAX 请求不能发送。
 
-npm 从5.2版开始，增加了 npx 命令。
+虽然这些限制是必要的，但是有时很不方便，合理的用途也受到影响。下面，我将详细介绍，如何规避上面三种限制。
 
-![img](./assets/bg2019020901.jpg)
+## 二、Cookie
 
-Node 自带 npm 模块，所以可以直接使用 npx 命令。万一不能用，就要手动安装一下。
+Cookie 是服务器写入浏览器的一小段信息，只有同源的网页才能共享。但是，两个网页一级域名相同，只是二级域名不同，浏览器允许通过设置`document.domain`共享 Cookie。
 
-```bash
-npm install -g npx
-```
+举例来说，A网页是`http://w1.example.com/a.html`，B网页是`http://w2.example.com/b.html`，那么只要设置相同的`document.domain`，两个网页就可以共享Cookie。
 
-### 调用项目安装的模块
+> ```
+> document.domain = 'example.com';
+> ```
 
-npx 想要解决的主要问题，就是调用项目内部安装的模块。比如，项目内部安装了测试工具 [Mocha](http://www.ruanyifeng.com/blog/2015/12/a-mocha-tutorial-of-examples.html)。
+现在，A网页通过脚本设置一个 Cookie。
 
-```bash
-npm install -D mocha
-```
+> ```
+> document.cookie = "test1=hello";
+> ```
 
-一般来说，调用 Mocha ，只能在项目脚本和 package.json 的[`scripts`](http://www.ruanyifeng.com/blog/2016/10/npm_scripts.html)字段里面， 如果想在命令行下调用，必须像下面这样。
+B网页就可以读到这个 Cookie。
 
-```bash
-# 项目的根目录下执行
-$ node-modules/.bin/mocha --version
-```
+> ```
+> var allCookie = document.cookie;
+> ```
 
-npx 就是想解决这个问题，让项目内部安装的模块用起来更方便，只要像下面这样调用就行了。
+注意，这种方法只适用于 Cookie 和 iframe 窗口，LocalStorage 和 IndexDB 无法通过这种方法，规避同源政策，而要使用下文介绍的PostMessage API。
 
-```bash
-npx mocha --version
-```
+另外，服务器也可以在设置Cookie的时候，指定Cookie的所属域名为一级域名，比如`.example.com`。
 
-npx 的原理很简单，就是运行的时候，会到`node_modules/.bin`路径和环境变量`$PATH`里面，检查命令是否存在。
+> ```
+> Set-Cookie: key=value; domain=.example.com; path=/
+> ```
 
-由于 npx 会检查环境变量`$PATH`，所以系统命令也可以调用。
+这样的话，二级域名和三级域名不用做任何设置，都可以读取这个Cookie。
 
-```bash
-# 等同于 ls
-npx ls
-```
+## 三、iframe
 
+如果两个网页不同源，就无法拿到对方的DOM。典型的例子是`iframe`窗口和`window.open`方法打开的窗口，它们与父窗口无法通信。
 
+比如，父窗口运行下面的命令，如果`iframe`窗口不是同源，就会报错。
 
-注意，Bash 内置的命令不在`$PATH`里面，所以不能用。比如，`cd`是 Bash 命令，因此就不能用`npx cd`。
+> ```
+> document.getElementById("myIFrame").contentWindow.document
+> // Uncaught DOMException: Blocked a frame from accessing a cross-origin frame.
+> ```
 
-### 避免全局安装模块
+上面命令中，父窗口想获取子窗口的DOM，因为跨源导致报错。
 
-除了调用项目内部模块，npx 还能避免全局安装的模块。比如，`create-react-app`这个模块是全局安装，npx 可以运行它，而且不进行全局安装。
+反之亦然，子窗口获取主窗口的DOM也会报错。
 
-```bash
-npx create-react-app my-react-app
-```
+> ```
+> window.parent.document.body
+> // 报错
+> ```
 
-上面代码运行时，npx 将`create-react-app`下载到一个临时目录，使用以后再删除。所以，以后再次执行上面的命令，会重新下载`create-react-app`。
+如果两个窗口一级域名相同，只是二级域名不同，那么设置上一节介绍的`document.domain`属性，就可以规避同源政策，拿到DOM。
 
-下载全局模块时，npx 允许指定版本。
+对于完全不同源的网站，目前有三种方法，可以解决跨域窗口的通信问题。
 
-```bash
-npx uglify-js@3.1.0 main.js -o ./dist/main.js
-```
+> - 片段识别符（fragment identifier）
+> - window.name
+> - 跨文档通信API（Cross-document messaging）
 
-上面代码指定使用 3.1.0 版本的`uglify-js`压缩脚本。
+### 3.1 片段识别符
 
-注意，只要 npx 后面的模块无法在本地发现，就会下载同名模块。比如，本地没有安装`http-server`模块，下面的命令会自动下载该模块，在当前目录启动一个 Web 服务。
+片段标识符（fragment identifier）指的是，URL的`#`号后面的部分，比如`http://example.com/x.html#fragment`的`#fragment`。如果只是改变片段标识符，页面不会重新刷新。
 
-```bash
-npx http-server
-```
+父窗口可以把信息，写入子窗口的片段标识符。
 
-### --no-install 参数和 --ignore-existing 参数
+> ```
+> var src = originURL + '#' + data;
+> document.getElementById('myIFrame').src = src;
+> ```
 
-如果想让 npx 强制使用本地模块，不下载远程模块，可以使用`--no-install`参数。如果本地不存在该模块，就会报错。
+子窗口通过监听`hashchange`事件得到通知。
 
-```bash
-npx --no-install http-server
-```
+> ```
+> window.onhashchange = checkMessage;
+> 
+> function checkMessage() {
+>   var message = window.location.hash;
+>   // ...
+> }
+> ```
 
-反过来，如果忽略本地的同名模块，强制安装使用远程模块，可以使用`--ignore-existing`参数。比如，本地已经全局安装了`create-react-app`，但还是想使用远程模块，就用这个参数。
+同样的，子窗口也可以改变父窗口的片段标识符。
 
-```bash
-npx --ignore-existing create-react-app my-react-app
-```
+> ```
+> parent.location.href= target + "#" + hash;
+> ```
 
-### 使用不同版本的 node
+### 3.2 window.name
 
-利用 npx 可以下载模块这个特点，可以指定某个版本的 Node 运行脚本。它的窍门就是使用 npm 的 [node 模块](https://www.npmjs.com/package/node)。
+浏览器窗口有`window.name`属性。这个属性的最大特点是，无论是否同源，只要在同一个窗口里，前一个网页设置了这个属性，后一个网页可以读取它。
 
-```bash
-npx node@0.12.8 -v
-v0.12.8
-```
+父窗口先打开一个子窗口，载入一个不同源的网页，该网页将信息写入`window.name`属性。
 
-上面命令会使用 0.12.8 版本的 Node 执行脚本。原理是从 npm 下载这个版本的 node，使用后再删掉。
+> ```
+> window.name = data;
+> ```
 
-某些场景下，这个方法用来切换 Node 版本，要比 nvm 那样的版本管理器方便一些。
+接着，子窗口跳回一个与主窗口同域的网址。
 
-### 相关链接
+> ```
+> location = 'http://parent.url.com/xxx.html';
+> ```
 
-- <http://www.ruanyifeng.com/blog/2019/02/npx.html>
+然后，主窗口就可以读取子窗口的`window.name`了。
 
-## 扩展阅读
+> ```
+> var data = document.getElementById('myFrame').contentWindow.name;
+> ```
 
-- [npm 模块管理器](http://javascript.ruanyifeng.com/nodejs/npm.html)
+这种方法的优点是，`window.name`容量很大，可以放置非常长的字符串；缺点是必须监听子窗口`window.name`属性的变化，影响网页性能。
 
-- [npm 模块安装机制](http://www.ruanyifeng.com/blog/2016/01/npm-install.html)
+### 3.3 window.postMessage
 
+上面两种方法都属于破解，HTML5为了解决这个问题，引入了一个全新的API：跨文档通信 API（Cross-document messaging）。
+
+这个API为`window`对象新增了一个`window.postMessage`方法，允许跨窗口通信，不论这两个窗口是否同源。
+
+举例来说，父窗口`http://aaa.com`向子窗口`http://bbb.com`发消息，调用`postMessage`方法就可以了。
+
+> ```
+> var popup = window.open('http://bbb.com', 'title');
+> popup.postMessage('Hello World!', 'http://bbb.com');
+> ```
+
+`postMessage`方法的第一个参数是具体的信息内容，第二个参数是接收消息的窗口的源（origin），即"协议 + 域名 + 端口"。也可以设为`*`，表示不限制域名，向所有窗口发送。
+
+子窗口向父窗口发送消息的写法类似。
+
+> ```
+> window.opener.postMessage('Nice to see you', 'http://aaa.com');
+> ```
+
+父窗口和子窗口都可以通过`message`事件，监听对方的消息。
+
+> ```
+> window.addEventListener('message', function(e) {
+>   console.log(e.data);
+> },false);
+> ```
+
+`message`事件的事件对象`event`，提供以下三个属性。
+
+> - `event.source`：发送消息的窗口
+> - `event.origin`: 消息发向的网址
+> - `event.data`: 消息内容
+
+下面的例子是，子窗口通过`event.source`属性引用父窗口，然后发送消息。
+
+> ```
+> window.addEventListener('message', receiveMessage);
+> function receiveMessage(event) {
+>   event.source.postMessage('Nice to see you!', '*');
+> }
+> ```
+
+`event.origin`属性可以过滤不是发给本窗口的消息。
+
+> ```
+> window.addEventListener('message', receiveMessage);
+> function receiveMessage(event) {
+>   if (event.origin !== 'http://aaa.com') return;
+>   if (event.data === 'Hello World') {
+>       event.source.postMessage('Hello', event.origin);
+>   } else {
+>     console.log(event.data);
+>   }
+> }
+> ```
+
+### 3.4 LocalStorage
+
+通过`window.postMessage`，读写其他窗口的 LocalStorage 也成为了可能。
+
+下面是一个例子，主窗口写入iframe子窗口的`localStorage`。
+
+> ```
+> window.onmessage = function(e) {
+>   if (e.origin !== 'http://bbb.com') {
+>     return;
+>   }
+>   var payload = JSON.parse(e.data);
+>   localStorage.setItem(payload.key, JSON.stringify(payload.data));
+> };
+> ```
+
+上面代码中，子窗口将父窗口发来的消息，写入自己的LocalStorage。
+
+父窗口发送消息的代码如下。
+
+> ```
+> var win = document.getElementsByTagName('iframe')[0].contentWindow;
+> var obj = { name: 'Jack' };
+> win.postMessage(JSON.stringify({key: 'storage', data: obj}), 'http://bbb.com');
+> ```
+
+加强版的子窗口接收消息的代码如下。
+
+> ```
+> window.onmessage = function(e) {
+>   if (e.origin !== 'http://bbb.com') return;
+>   var payload = JSON.parse(e.data);
+>   switch (payload.method) {
+>     case 'set':
+>       localStorage.setItem(payload.key, JSON.stringify(payload.data));
+>       break;
+>     case 'get':
+>       var parent = window.parent;
+>       var data = localStorage.getItem(payload.key);
+>       parent.postMessage(data, 'http://aaa.com');
+>       break;
+>     case 'remove':
+>       localStorage.removeItem(payload.key);
+>       break;
+>   }
+> };
+> ```
+
+加强版的父窗口发送消息代码如下。
+
+> ```
+> var win = document.getElementsByTagName('iframe')[0].contentWindow;
+> var obj = { name: 'Jack' };
+> // 存入对象
+> win.postMessage(JSON.stringify({key: 'storage', method: 'set', data: obj}), 'http://bbb.com');
+> // 读取对象
+> win.postMessage(JSON.stringify({key: 'storage', method: "get"}), "*");
+> window.onmessage = function(e) {
+>   if (e.origin != 'http://aaa.com') return;
+>   // "Jack"
+>   console.log(JSON.parse(e.data).name);
+> };
+> ```
+
+## 四、AJAX
+
+同源政策规定，AJAX请求只能发给同源的网址，否则就报错。
+
+除了架设服务器代理（浏览器请求同源服务器，再由后者请求外部服务），有三种方法规避这个限制。
+
+> - JSONP
+> - WebSocket
+> - CORS
+
+### 4.1 JSONP
+
+JSONP是服务器与客户端跨源通信的常用方法。最大特点就是简单适用，老式浏览器全部支持，服务器改造非常小。
+
+它的基本思想是，网页通过添加一个`<script>`元素，向服务器请求JSON数据，这种做法不受同源政策限制；服务器收到请求后，将数据放在一个指定名字的回调函数里传回来。
+
+首先，网页动态插入`<script>`元素，由它向跨源网址发出请求。
+
+> ```
+> function addScriptTag(src) {
+>   var script = document.createElement('script');
+>   script.setAttribute("type","text/javascript");
+>   script.src = src;
+>   document.body.appendChild(script);
+> }
+> 
+> window.onload = function () {
+>   addScriptTag('http://example.com/ip?callback=foo');
+> }
+> 
+> function foo(data) {
+>   console.log('Your public IP address is: ' + data.ip);
+> };
+> ```
+
+上面代码通过动态添加`<script>`元素，向服务器`example.com`发出请求。注意，该请求的查询字符串有一个`callback`参数，用来指定回调函数的名字，这对于JSONP是必需的。
+
+服务器收到这个请求以后，会将数据放在回调函数的参数位置返回。
+
+> ```
+> foo({
+>   "ip": "8.8.8.8"
+> });
+> ```
+
+由于`<script>`元素请求的脚本，直接作为代码运行。这时，只要浏览器定义了`foo`函数，该函数就会立即调用。作为参数的JSON数据被视为JavaScript对象，而不是字符串，因此避免了使用`JSON.parse`的步骤。
+
+### 4.2 WebSocket
+
+WebSocket是一种通信协议，使用`ws://`（非加密）和`wss://`（加密）作为协议前缀。该协议不实行同源政策，只要服务器支持，就可以通过它进行跨源通信。
+
+下面是一个例子，浏览器发出的WebSocket请求的头信息（摘自[维基百科](https://en.wikipedia.org/wiki/WebSocket)）。
+
+> ```
+> GET /chat HTTP/1.1
+> Host: server.example.com
+> Upgrade: websocket
+> Connection: Upgrade
+> Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
+> Sec-WebSocket-Protocol: chat, superchat
+> Sec-WebSocket-Version: 13
+> Origin: http://example.com
+> ```
+
+上面代码中，有一个字段是`Origin`，表示该请求的请求源（origin），即发自哪个域名。
+
+正是因为有了`Origin`这个字段，所以WebSocket才没有实行同源政策。因为服务器可以根据这个字段，判断是否许可本次通信。如果该域名在白名单内，服务器就会做出如下回应。
+
+> ```
+> HTTP/1.1 101 Switching Protocols
+> Upgrade: websocket
+> Connection: Upgrade
+> Sec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
+> Sec-WebSocket-Protocol: chat
+> ```
+
+### 4.3 CORS
+
+CORS是跨源资源分享（Cross-Origin Resource Sharing）的缩写。它是W3C标准，是跨源AJAX请求的根本解决方法。相比JSONP只能发`GET`请求，CORS允许任何类型的请求。
+
+（完）

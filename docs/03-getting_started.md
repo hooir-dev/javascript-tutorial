@@ -1,211 +1,157 @@
-# 第3章 起步
+# [Vue.js双向绑定的实现原理](https://www.cnblogs.com/kidney/p/6052935.html)
 
-[TOC]
+​       Vue.js 最核心的功能有两个，一是响应式的数据绑定系统，二是组件系统。本文仅探究双向绑定是怎样实现的。先讲涉及的知识点，再用简化得不能再简化的代码实现一个简单的 hello world 示例。
 
----
+ 　　参考文章：<https://segmentfault.com/a/1190000006599500>
 
-## 安装 Node 环境
+**一、访问器属性**
 
-### 版本说明
+​       访问器属性是对象中的一种特殊属性，它不能直接在对象中设置，而必须通过 defineProperty() 方法单独定义。
 
-- LTS 长期支持版，适用于开发和生产环境
-- Current 最新版，适用于体验测试
+​       var obj = { };
 
-### 下载
+​       // 为obj定义一个名为 hello 的访问器属性
 
-- https://nodejs.org/en/download/
+​       Object.defineProperty(obj, "hello", {
 
-### 安装（Windows）
+​         get: function () {return sth},
 
-![image-20181120125258392](./assets/image-20181120125258392-2689578.png)
+​         set: function (val) {/* do sth */}
 
-点击下一步
+​       })
 
-![image-20181120125456932](./assets/image-20181120125456932-2689696.png)
+​       obj.hello // 可以像普通属性一样读取访问器属性
 
-同意协议，点击下一步
+​       访问器属性的"值"比较特殊，读取或设置访问器属性的值，实际上是调用其内部特性：get和set函数。
 
-![image-20181120125522493](./assets/image-20181120125522493-2689722.png)
+​       obj.hello // 读取属性，就是调用get函数并返回get函数的返回值
 
-点击下一步
+​       obj.hello = "abc" // 为属性赋值，就是调用set函数，赋值其实是传参 ![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120155820248-500778578.png)
 
-![image-20181120125605674](./assets/image-20181120125605674-2689765.png)
+​       get 和 set 方法内部的 this 都指向 obj，这意味着 get 和 set 函数可以操作对象内部的值。另外，访问器属性的会"覆盖"同名的普通属性，因为访问器属性会被优先访问，与其同名的普通属性则会被忽略。
 
-点击下一步
+ 
 
-![image-20181120125801058](./assets/image-20181120125801058-2689881.png)
+**二、极简双向绑定的实现**
 
-点击下一步
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120155856263-1051312268.png)
 
-![image-20181120125831374](./assets/image-20181120125831374-2689911.png)
+​       此例实现的效果是：随文本框输入文字的变化，span 中会同步显示相同的文字内容；在js或控制台显式的修改 obj.hello 的值，视图会相应更新。这样就实现了 model => view 以及 view => model 的双向绑定。
 
-点击 Install 开始安装
+ ![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160007029-1444374091.png)
 
-![image-20181120125856275](./assets/image-20181120125856275-2689936.png)
+​       以上就是 Vue 实现双向绑定的基本原理。
 
-正在安装中...
+ 
 
-![image-20181120125920281](./assets/image-20181120125920281-2689960.png)
+**三、分解任务**
 
-安装完成，点击 Finish 结束。
+​       上述示例仅仅是为了说明原理。我们最终要实现的是：
 
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160023154-705049955.png)
 
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160046920-469941328.png)
 
-### 确认是否安装成功
+​       首先将该任务分成几个子任务：
 
-打开命令行，输入 `node --version` 或者 `node -v`。如果能看到类似于下面输出 `v10.13.0` 的版本号，则表示安装成功。
+　　 1、输入框以及文本节点与 data 中的数据绑定
 
-![image-20181120130926564](./assets/image-20181120130926564-2690566.png)
+　　 2、输入框内容变化时，data 中的数据同步变化。即 view => model 的变化。
 
-> 注意：如果是安装之前打开的命令行请在安装结束之后关闭重新打开再执行上述命令
+　　 3、data 中的数据变化时，文本节点的内容同步变化。即 model => view 的变化。
 
-## REPL
+​       要实现任务一，需要对 DOM 进行编译，这里有一个知识点：DocumentFragment。
 
-> 类似于浏览器中的 Console ，可以做一些基本的代码测试。
->
-> - R：Read 读取
-> - E：Eval 执行
-> - P：Print 输出
-> - L：Loop 循环
+ 
 
-- 进入
-  - 输入 `node` 回车即可
-- 使用
-- 离开
-  - 按住 `Ctrl` 不要丢，`c` 两次即可退出
+**四、DocumentFragment**
 
-![image-20181107154211879](./assets/image-20181107154211879.png)
+​       DocumentFragment（文档片段）可以看作节点容器，它可以包含多个子节点，当我们将它插入到 DOM 中时，只有它的子节点会插入目标节点，所以把它看作一组节点的容器。使用 DocumentFragment 处理节点，速度和性能远远优于直接操作 DOM。Vue 进行编译时，就是将挂载目标的所有子节点劫持（真的是劫持，通过 append 方法，DOM 中的节点会被自动删除）到 DocumentFragment 中，经过一番处理后，再将 DocumentFragment 整体返回插入挂载目标。
 
----
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160124217-527060528.png)
 
-## 执行一个JS文件
+ 
 
-**1. 新建一个 hello.js 并写入以下示例代码**
+\# 勘误：flag.append() 应为 flag.appendChild()。下同。在 Chrome 中用 append() 竟然正常，没报错。
 
-```javascript
-const message = 'Hello Node.js!'
-console.log(message)
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160134232-1887803443.png)
 
-```
+​      
 
-**2. 打开命令行并定位到 `hello.js` 文件所属目录**
+**五、数据初始化绑定**
 
-**3. 在命令行中输入 `node hello.js` 回车执行**
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160200217-164611845.png)
 
-> 注意：
-> - 文件名不要起名为 `node.js`
-> - 文件名或者文件路径最好不要有中文
-> - 文件路径或者文件名不要出现空格
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160233873-127171744.png)
 
----
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160243545-44236467.png)
 
-## 文件读写
+​       以上代码实现了任务一，我们可以看到，hello world已经呈现在输入框和文本节点中。
 
-### 文件读取： readFile
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160327467-1883154446.png)
 
-```javascript
-fs.readFile(var1, var2, var3);
-参数1: 要读取的文件路径 --- 相对路径和绝对路径均可，推荐使用绝对路径
-参数2: 配置项，主要用来配置字符集。可选参数。
-      如果不设置该参数，文件内容会以二进制形式返回
-参数3: 读取完成后触发的回调函数，有两个参数 --- err 和 result
-     读取成功:
-         err: null
-         result: 文件内容，如果不设置参数2,则返回二进制数据。可以使用 toString() 方法将二进制数据
-                 转为正常字符串
-     读取失败:
-         err: 错误对象
-         result: undefinedconst fs = require('fs')
+ 
 
-fs.readFile('/etc/passwd', (err, data) => {
-  if (err) throw err
-  console.log(data)
-})
+**六、响应式的数据绑定**
 
-```
+​       再来看任务二的实现思路：当我们在输入框输入数据的时候，首先触发 input 事件（或者 keyup、change 事件），在相应的事件处理程序中，我们获取输入框的 value 并赋值给 vm 实例的 text 属性。我们会利用 defineProperty 将 data 中的 text 设置为 vm 的访问器属性，因此给 vm.text 赋值，就会触发 set 方法。在 set 方法中主要做两件事，第一是更新属性的值，第二留到任务三再说。
 
-### 文件写入：writeFile
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160409513-886321336.png)
 
-```javascript
-//向指定文件中写入字符串（覆盖写入）， 如果没有该文件则尝试创建该文件
-const fs = require('fs')
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160441326-1073521186.png)
 
-fs.writeFile('message.txt', 'Hello Node.js', (err) => {
-  if (err) throw err
-  console.log('The file has been saved!')
-})
+​       任务二也就完成了，text 属性值会与输入框的内容同步变化：
 
-```
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160501763-1127106704.png)
 
-### 文件追加：appendFile
+ 
 
-```javascript
-//向指定文件中写入字符串（追加写入）， 如果没有该文件则尝试创建该文件
+**七、订阅/发布模式（subscribe&publish）**
 
-fs.appendFile(var1, var2, var3, var4);
-参数1: 要写入的文件路径 --- 相对路径和绝对路径均可，推荐使用绝对路径
-参数2: 要写入文件的字符串
-参数3: 配置项，设置写入的字符集，默认utf-8
-参数4: 写入完成后触发的回调函数，有一个参数 --- err （错误对象）
-```
+​       text 属性变化了，set 方法触发了，但是文本节点的内容没有变化。如何让同样绑定到 text 的文本节点也同步变化呢？这里又有一个知识点：订阅发布模式。
 
+​       订阅发布模式（又称观察者模式）定义了一种一对多的关系，让多个观察者同时监听某一个主题对象，这个主题对象的状态发生改变时就会通知所有观察者对象。
 
+​       发布者发出通知 => 主题对象收到通知并推送给订阅者 => 订阅者执行相应操作
 
----
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160541513-1856723431.png)
 
+​       之前提到的，当 set 方法触发后做的第二件事就是作为发布者发出通知：“我是属性 text，我变了”。文本节点则是作为订阅者，在收到消息后执行相应的更新操作。
 
+ 
 
-### 遍历目录：readdir
+**八、双向绑定的实现**
 
-```javascript
-//遍历目录，获取目录下所有的文件及子目录的名称
+​       回顾一下，每当 new 一个 Vue，主要做了两件事：第一个是监听数据：observe(data)，第二个是编译 HTML：nodeToFragement(id)。
 
-fs.readdir(var1, var2, var3);
-参数1: 要遍历的目录
-参数2: 字符集， 可选参数，默认为utf-8
-参数3: 遍历完成后触发的回调函数，有两个参数 --- err 和 files
-    err: 错误对象
-    files: 文件和子目录名，数组
-```
+​       在监听数据的过程中，会为 data 中的每一个属性生成一个主题对象 dep。
 
+​       在编译 HTML 的过程中，会为每个与数据绑定相关的节点生成一个订阅者 watcher，watcher 会将自己添加到相应属性的 dep 中。
 
+​       我们已经实现：修改输入框内容 => 在事件回调函数中修改属性值 => 触发属性的 set 方法。
 
-## HTTP 服务
+​       接下来我们要实现的是：发出通知 dep.notify() => 触发订阅者的 update 方法 => 更新视图。
 
-```javascript
-// 接下来，我们要干一件使用 Node 很有成就感的一件事儿
-// 你可以使用 Node 非常轻松的构建一个 Web 服务器
-// 在 Node 中专门提供了一个核心模块：http
-// http 这个模块的职责就是帮你创建编写服务器的
+​       这里的关键逻辑是：如何将 watcher 添加到关联属性的 dep 中。
 
-// 1. 加载 http 核心模块
-var http = require('http')
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160644154-1888733590.png)
 
-// 2. 使用 http.createServer() 方法创建一个 Web 服务器
-//    返回一个 Server 实例
-var server = http.createServer()
+​       在编译 HTML 过程中，为每个与 data 关联的节点生成一个 Watcher。Watcher 函数中发生了什么呢？
 
-// 3. 服务器要干嘛？
-//    提供服务：对 数据的服务
-//    发请求
-//    接收请求
-//    处理请求
-//    给个反馈（发送响应）
-//    注册 request 请求事件
-//    当客户端请求过来，就会自动触发服务器的 request 请求事件，然后执行第二个参数：回调处理函数
-server.on('request', function () {
-  res.end('Hello Node.js!')
-})
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160659310-1972832043.png)
 
-// 4. 绑定端口号，启动服务器
-server.listen(3000, function () {
-  console.log('服务器启动成功，请求访问 http://127.0.0.1:3000/')
-})
-```
+​       首先，将自己赋给了一个全局变量 Dep.target；
 
+​       其次，执行了 update 方法，进而执行了 get 方法，get 的方法读取了 vm 的访问器属性，从而触发了访问器属性的 get 方法，get 方法中将该 watcher 添加到了对应访问器属性的 dep 中；
 
+​       再次，获取属性的值，然后更新视图。
 
-### 全局成员
+​       最后，将 Dep.target 设为空。因为它是全局变量，也是 watcher 与 dep 关联的唯一桥梁，任何时刻都必须保证 Dep.target 只有一个值。
 
-> [Global Objects](https://nodejs.org/dist/latest-v10.x/docs/api/globals.html)
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160749388-947918217.png)
 
+![img](https://images2015.cnblogs.com/blog/925891/201611/925891-20161120160814420-1825354650.png)
+
+​       至此，hello world 双向绑定就基本实现了。文本内容会随输入框内容同步变化，在控制器中修改 vm.text 的值，会同步反映到文本内容中。
+
+ 　
