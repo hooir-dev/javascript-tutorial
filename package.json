@@ -1,7 +1,7 @@
 {
   "name": "vuejs-tutorial",
   "version": "1.0.0",
-  "repository": "https://github.com/thisliuyang/javascript-tutorial.git",
+  "repository": "https://github.com/thisliuyang/web-tutorial.git",
   "author": "thisliuyang <thisliuyang@163.com>",
   "license": "MIT",
   "scripts": {
