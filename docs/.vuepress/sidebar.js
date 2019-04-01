@@ -15,9 +15,5 @@ module.exports = [
   '/09-db',
   '/10-web_db',
   '/11-session_persistence',
-  '/12-ajax',
-  '/13-alibaixiu',
-  '/14-asynchronous_ programming',
-  '/15-dep_ops',
-  '/16-other'
+  '/12-ajax'
 ]
