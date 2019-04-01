@@ -49,10 +49,10 @@ module.exports = {
         {text: 'css',link: 'https://baidu.com'}
       ] }
     ],
-    repo: 'thisliuyang/javascript-tutorial',
+    repo: 'thisliuyang/web-tutorial',
     repoLabel: 'GitHub',
     // 假如你的文档仓库和项目本身不在一个仓库：
-    docsRepo: 'thisliuyang/javascript-tutorial',
+    docsRepo: 'thisliuyang/web-tutorial',
     lastUpdated: '上次更新',
     docsDir: 'docs',
     editLinks: true,
