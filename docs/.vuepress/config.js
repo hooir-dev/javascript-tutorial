@@ -7,7 +7,7 @@ module.exports = {
    * 参考：https://vuepress.vuejs.org/zh/guide/assets.html#%E5%9F%BA%E7%A1%80%E8%B7%AF%E5%BE%84
    */
   base: '/',
-  title: 'nodejs 入门教程',
+  title: 'javascript 学习总结',
   description: '持续更新中...',
   // host: '0.0.0.0',
   // port: 8080,
@@ -45,14 +45,14 @@ module.exports = {
     nav: [
       { text: '刘洋博客', link: 'https://thisliuyang.cn' },
       { text: '学习文档', items: [
-        {text: 'js',link: 'http://thisliuyang.cn'},
-        {text: 'css',link: 'https://baidu.com'}
+        {text: 'vue',link: 'https://vuejs.itliuyang.cn/'},
+        {text: 'nodejs',link: 'https://nodejs.itliuyang.cn/'}
       ] }
     ],
-    repo: 'thisliuyang/nodejs-tutorial',
+    repo: 'thisliuyang/javascript-tutorial',
     repoLabel: 'GitHub',
     // 假如你的文档仓库和项目本身不在一个仓库：
-    docsRepo: 'thisliuyang/nodejs-tutorial',
+    docsRepo: 'thisliuyang/javascript-tutorial',
     lastUpdated: '上次更新',
     docsDir: 'docs',
     editLinks: true,

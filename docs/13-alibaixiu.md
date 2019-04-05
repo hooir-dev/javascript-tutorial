@@ -1,1732 +1,844 @@
-# 第13章  阿里百秀综合案例
+# Element 节点
 
-## 起步
+`Element`节点对象对应网页的 HTML 元素。每一个 HTML 元素，在 DOM 树上都会转化成一个`Element`节点对象（以下简称元素节点）。
 
-### 初始化项目目录结构
-
-```
-.
-├── node_modules 第三方包存储目录(使用npm装包默认生成)
-├── controllers 控制器
-├── models 模型
-├── public 静态资源（图片、样式、客户端js...）
-├── views 视图(存储HTML视图文件)
-├── app.js 应用程序启动入口（加载Express，启动HTTP服务。。。）
-├── config.js 应用配置文件（把经常需要改动的数据放到配置文件中，修改方便）
-├── utils 存储工具模块（例如用来操作数据库的模块）
-├── middlewares 放置自定义中间件
-├── routes 存储路由相关模块
-├── package.json 项目包说明文件，用来存储项目名称，第三方包依赖等信息（通过 npm init初始化）
-├── package-lock.json npm产生的包说明文件（由npm装包自动产生）
-└── README.md 项目说明文件
-
-```
-
-### 使用 Express 创建 Web 服务
-
-1. 安装 Express
-
-```bash
-npm i express
-```
-
-2. 在 `app.js` 中写入以下内容
+元素节点的`nodeType`属性都是`1`。
 
 ```javascript
-const express = require('express')
-const app = express()
-
-app.get('/', (req, res) => res.send('Hello World!'))
-
-app.listen(3000, () => console.log('Serve listening http://127.0.0.1:3000/'))
-
+var p = document.querySelector('p');
+p.nodeName // "P"
+p.nodeType // 1
 ```
 
-3. 使用 [nodemon](https://github.com/remy/nodemon) 启动开发模式
+`Element`对象继承了`Node`接口，因此`Node`的属性和方法在`Element`对象都存在。此外，不同的 HTML 元素对应的元素节点是不一样的，浏览器使用不同的构造函数，生成不同的元素节点，比如`<a>`元素的节点对象由`HTMLAnchorElement`构造函数生成，`<button>`元素的节点对象由`HTMLButtonElement`构造函数生成。因此，元素节点不是一种对象，而是一组对象，这些对象除了继承`Element`的属性和方法，还有各自构造函数的属性和方法。
 
-```bash
-nodemon app.js
-```
+## 实例属性
 
-4. 在浏览器中访问 `http://127.0.0.1:3000/`
+### 元素特性的相关属性
 
-### 导入并开放静态资源
+**（1）Element.id**
 
-1. 将模板中的 html 静态文件放到项目的 `views` 目录中
-2. 将模板中的静态资源（css、图片、客户端js）放到 `public` 目录中
-
-3. 在 Web 服务中把 `public` 目录开放出来
+`Element.id`属性返回指定元素的`id`属性，该属性可读写。
 
 ```javascript
-...
-
-const path = require('path')
-
-app.use('/public', express.static(path.join(__dirname, './public')))
-
-...
-
+// HTML 代码为 <p id="foo">
+var p = document.querySelector('p');
+p.id // "foo"
 ```
 
-4. 测试访问 public 中的资源
+注意，`id`属性的值是大小写敏感，即浏览器能正确识别`<p id="foo">`和`<p id="FOO">`这两个元素的`id`属性，但是最好不要这样命名。
 
-### 使用模板引擎渲染页面
+**（2）Element.tagName**
 
-在 Node 中，不仅仅有 art-template 这个模板引擎，还有很多别的。
-
-- ejs
-- pug
-- handlebars
-- nunjucks
-- ...
-
-> 参考文档：
->
-> - https://aui.github.io/art-template/express/
-
-1. 安装
-
-```bash
-npm i art-template express-art-template
-```
-
-2. 配置
-
-```bash
-...
-
-// res.render() 的时候默认去 views 中查找模板文件
-// 如果想要修改，可以使用下面的方式
-app.set('views', '模板文件存储路径')
-
-// express-art-template 内部依赖了 art-template
-app.engine('html', require('express-art-template'))
-
-...
-```
-
-3. 使用
+`Element.tagName`属性返回指定元素的大写标签名，与`nodeName`属性的值相等。
 
 ```javascript
-app.get('/', (req, res, next) => {
-  // render 方法内部就会去
-  // 1. 读取文件
-  // 2. 模板引擎解析替换
-  // 3. 发送响应结果
-  res.render('index.html')
-})
-
+// HTML代码为
+// <span id="myspan">Hello</span>
+var span = document.getElementById('myspan');
+span.id // "myspan"
+span.tagName // "SPAN"
 ```
 
-4. 修改页面中的静态资源引用路径让页面中的资源正常加载
-5. 浏览测试
+**（3）Element.dir**
 
-### 提取路由模块
+`Element.dir`属性用于读写当前元素的文字方向，可能是从左到右（`"ltr"`），也可能是从右到左（`"rtl"`）。
 
-- 简单应用提取一个路由文件模块
+**（4）Element.accessKey**
 
-- 将来路由越来越多，所以按照不同的业务分门别类的创建了多个路由文件模块放到了 routes 目录中，好管理和维护。
-
-
-
-提取路由模块操作步骤：
-
-1. 创建路由文件
-
-2. 写入以下基本内容
+`Element.accessKey`属性用于读写分配给当前元素的快捷键。
 
 ```javascript
-const express = require('express')
-const router = express.Router()
-
-// 自定义路由内容
-// router.get
-// router.get
-// router.post
-// ...
-
-module.exports = router
-
+// HTML 代码如下
+// <button accesskey="h" id="btn">点击</button>
+var btn = document.getElementById('btn');
+btn.accessKey // "h"
 ```
 
-3. 在 `app.js` 中挂载路由模块
+上面代码中，`btn`元素的快捷键是`h`，按下`Alt + h`就能将焦点转移到它上面。
+
+**（5）Element.draggable**
+
+`Element.draggable`属性返回一个布尔值，表示当前元素是否可拖动。该属性可读写。
+
+**（6）Element.lang**
+
+`Element.lang`属性返回当前元素的语言设置。该属性可读写。
 
 ```javascript
-...
-// 加载路由模块
-const 路由模块 = require('路由模块路径')
-
-...
-
-// 挂载路由模块到 app 上
-app.use(路由模块)
-
-...
+// HTML 代码如下
+// <html lang="en">
+document.documentElement.lang // "en"
 ```
 
-4. 打开浏览器访问路由路径进行测试。
+**（7）Element.tabIndex**
 
+`Element.tabIndex`属性返回一个整数，表示当前元素在 Tab 键遍历时的顺序。该属性可读写。
 
+`tabIndex`属性值如果是负值（通常是`-1`），则 Tab 键不会遍历到该元素。如果是正整数，则按照顺序，从小到大遍历。如果两个元素的`tabIndex`属性的正整数值相同，则按照出现的顺序遍历。遍历完所有`tabIndex`为正整数的元素以后，再遍历所有`tabIndex`等于`0`、或者属性值是非法值、或者没有`tabIndex`属性的元素，顺序为它们在网页中出现的顺序。
 
-### 提取模板页
+**（8）Element.title**
 
-> 参考文档：
->
-> - [art-template 模板继承](https://aui.github.io/art-template/docs/syntax.html#Template-inheritance)
->   - extend
->   - block
-> - [art-template 子模板](https://aui.github.io/art-template/docs/syntax.html#Sub-template)
->   - include
+`Element.title`属性用来读写当前元素的 HTML 属性`title`。该属性通常用来指定，鼠标悬浮时弹出的文字提示框。
 
+### 元素状态的相关属性
 
+**（1）Element.hidden**
 
-### 走通页面路由导航
-
-| 请求路径                  | 作用                     | 备注 |
-| ------------------------- | ------------------------ | ---- |
-| /                         | 渲染门户端首页           |      |
-| /posts                    | 渲染门户端文章列表页     |      |
-| /posts/:id                | 渲染门户端文章详情页     |      |
-| /admin                    | 渲染管理系统首页         |      |
-| /admin/posts              | 渲染管理系统文章列表页   |      |
-| /admin/categories         | 渲染管理系统文章分类页   |      |
-| /admin/login              | 渲染管理系统登录页       |      |
-| /admin/users              | 渲染管理系统用户管理页   |      |
-| /admin/posts/new          | 渲染管理系统添加文章页面 |      |
-| /admin/banners            | 渲染管理系统轮播管理页面 |      |
-| /admin/website            | 渲染管理系统网站设置页面 |      |
-| /admin/comments           | 渲染管理系统评论管理页面 |      |
-| /admin/settings/profile   | 渲染管理系统个人中心页面 |      |
-| /admin/settings/reset-pwd | 渲染管理系统设置密码页面 |      |
-| ...                       | ...                      |      |
-
-
-
-### 导入数据库
-
-- 新建一个数据库命名为 `alishow`
-- 在 `alishow` 数据库中执行下发的数据库文件 `ali.sql`
-- 了解表的含义
-
-### 封装数据库操作模块
-
-> 参考文档：
->
-> - https://github.com/mysqljs/mysql
-
-1. 安装
-
-```bash
-npm i mysql
-```
-
-2. 基本使用
+`Element.hidden`属性返回一个布尔值，表示当前元素的`hidden`属性，用来控制当前元素是否可见。该属性可读写。
 
 ```javascript
-var mysql      = require('mysql');
-var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'me',
-  password : 'secret',
-  database : 'my_db'
-});
+var btn = document.getElementById('btn');
+var mydiv = document.getElementById('mydiv');
 
-connection.connect();
-
-connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
-  if (error) throw error;
-  console.log('The solution is: ', results[0].solution);
-});
-
-connection.end();
+btn.addEventListener('click', function () {
+  mydiv.hidden = !mydiv.hidden;
+}, false);
 ```
 
-3. 上面的方式是创建了单个连接，不靠谱，一旦这个连接挂掉，就无法操作数据库。我们推荐使用连接池的方式来操作数据库，所以将单个连接的方式改为如下连接池的方式。
+注意，该属性与 CSS 设置是互相独立的。CSS 对这个元素可见性的设置，`Element.hidden`并不能反映出来。也就是说，这个属性并不能用来判断当前元素的实际可见性。
 
-```javascript
-var mysql = require('mysql');
-var pool  = mysql.createPool({
-  connectionLimit : 10,
-  host            : 'example.org',
-  user            : 'bob',
-  password        : 'secret',
-  database        : 'my_db'
-});
+CSS 的设置高于`Element.hidden`。如果 CSS 指定了该元素不可见（`display: none`）或可见（`display: hidden`），那么`Element.hidden`并不能改变该元素实际的可见性。换言之，这个属性只在 CSS 没有明确设定当前元素的可见性时才有效。
 
-pool.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
-  if (error) throw error;
-  console.log('The solution is: ', results[0].solution);
-});
+**（2）Element.contentEditable，Element.isContentEditable**
 
-```
-
-4. 我们在项目的很多地方都要操作数据库，所以为了方便，我们将数据库操作封装为了一个单独的工具模块放到了 `utils/db.js` 中，哪里使用就在哪里加载。
-
-```javascript
-const mysql = require('mysql')
-
-// 创建一个连接池
-// 连接池中创建了多个连接
-const pool = mysql.createPool({
-  connectionLimit: 10, // 连接池的限制大小
-  host: 'localhost',
-  user: 'root',
-  password: '123456',
-  database: 'alishow63'
-})
-
-// 把连接池导出
-// 谁要操作数据库，谁就加载 db.js 模块，拿到 poll，点儿出 query 方法操作
-module.exports = pool
-
-```
-
-5. 例如在 `xxx` 模块中需要操作数据库，则可以直接
-
-```javascript
-const db = require('db模块路径')
-
-// 执行数据库操作
-db.query()...
-
-```
-
-### 测试渲染文章列表页
-
-```javascript
-...
-const db = require('../utilds/db')
-...
-
-router.get('/admin/posts', (req, res, next) => {
-  db.query('SELECT * FROM `ali_aicle`', (err, ret) => {
-    if (err) {
-      throw err
-    }
-
-    res.render('admin/posts.html', {
-      posts: ret
-    })
-  })
-})
-
-...
-```
-
-
-
-### 服务端全局错误处理
-
-利用错误处理中间件：http://expressjs.com/en/guide/error-handling.html
-
-```javascript
-app.use((err, req, res, next) => {
-  // 1. 记录错误日志
-  // 2. 一些比较严重的错误，还应该通知网站负责人或是开发人员等
-  //    可以通过程序调用第三方服务，发短信，发邮件
-  // 3. 把错误消息发送到客户端 500 Server Internal Error
-  res.status(500).send({
-    error: err.message
-  })
-})
-```
-
-> 注意：执行错误处理中间件挂载的代码必须在我们的路由执行挂载之后
-
-然后在我们的路由处理中，如果有错误，就调用 next 函数传递错误对象，例如
-
-```javascript
-rouget.get('xxx', (req, res, next) => {
-  xxx操作
-  if (err) {
-    // 调用 next，传递 err 错误对象
-    return next(err)
-  }
-})
-```
-
-### 使用 errorhandler 美化错误输出页面
-
-> 参考文档：https://github.com/expressjs/errorhandler
-
-安装
-
-```bash
-# 注意：使用淘宝镜像源安装这个包可能会失败（淘宝镜像源也不能一劳永逸）
-# 建议使用 npm 官方镜像源安装这个包
-npm i errorhandler
-```
-
-配置
-
-```javascript
-...
-const errorhandler = require('errorhandler')
-...
-
-// 后面讲发布部署的时候再将这种方式，不用修改代码，可以在程序的外部决定内部的执行逻辑
-if (process.env.NODE_ENV === 'development') {
-  app.use(errorhandler())
-}
-
-```
-
-也可以错误消息输出到系统通知
-
-```javascript
-...
-var errorhandler = require('errorhandler')
-var notifier = require('node-notifier')
-
-...
-
-if (process.env.NODE_ENV === 'development') {
-  // only use in development
-  app.use(errorhandler({log: errorNotification}))
-}
-
-
-// 将错误输出消息输出到系统通知
-function errorNotification (err, str, req) {
-  var title = 'Error in ' + req.method + ' ' + req.url
-
-  notifier.notify({
-    title: title,
-    message: str
-  })
-}
-```
-
-
-
-### 小结
-
-
-
-## 分类管理
-
-### 分类列表
-
-一、页面加载，发起 Ajax 请求，获取分类列表数据，等待响应
-
-```javascript
-$.ajax({
-  url: '/api/categories',
-  method: 'GET',
-  data: {},
-  dataType: 'json',
-  success: function (data) {
-    // 1. 判断数据是否正确
-    // 2. 使用模板引擎渲染列表数据
-    // 3. 把渲染结果替换到列表容器中
-    console.log(data)
-  },
-  error: function (err) {
-    console.log('请求失败了', err)
-  }
-})
-
-```
-
-
-
-二、服务端收到请求，提供请求方法为 `GET`, 请求路径为 `/api/categories` 的路由，响应分类列表数据
-
-```javascript
-// 1. 添加接口路由
-router.get('/api/categories/list', (req, res, next) => {
-  // 2. 操作数据库获取数据
-  db.query('SELECT * FROM `ali_cate`', function (err, data) {
-    if (err) {
-      throw err
-    }
-    
-  	// 3. 把数据响应给客户端
-    res.send({
-      success: true,
-      data
-    })
-  })
-})
-
-```
-
-三、客户端正确的收到服务端响应的数据了，使用数据结合模板引擎渲染页面内容
-
-0. 配置客户端模板引擎
-   1. 下载
-   2. 引用
-
-1. 准备模板字符串
+HTML 元素可以设置`contentEditable`属性，使得元素的内容可以编辑。
 
 ```html
-<script type="text/html" id="list_template">
-  {%each listData%}
-  <tr>
-    <td class="text-center"><input type="checkbox"></td>
-    <td>{% $value.cate_name %}</td>
-    <td>{% $value.cate_slug %}</td>
-    <td class="text-center">
-      <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-      <a data-id="{% $value.cate_id %}" name="delete" href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-    </td>
-  </tr>
-  {%/each%}
-</script>
-
-<script>
-  // template('script 节点 id')
-  // 当前页面是由服务端渲染出来的
-  // 服务端先先对当前页面进行模板引擎处理
-  // 服务端处理的时候根本不关心你的内容，只关心模板语法，我要解析替换
-  // 当你的服务端模板引擎语法和客户端模板引擎语法一样的时候，就会产生冲突
-  //    服务端会把客户端的模板字符串页给解析掉
-  //    这就是所谓的前后端模板语法冲突
-  
-  // 修改模板引擎的语法界定符
-  template.defaults.rules[1].test = /{%([@#]?)[ \t]*(\/?)([\w\W]*?)[ \t]*%}/;
-</script>
-
+<div contenteditable>123</div>
 ```
 
-后续处理：
+上面代码中，`<div>`元素有`contenteditable`属性，因此用户可以在网页上编辑这个区块的内容。
+
+`Element.contentEditable`属性返回一个字符串，表示是否设置了`contenteditable`属性，有三种可能的值。该属性可写。
+
+- `"true"`：元素内容可编辑
+- `"false"`：元素内容不可编辑
+- `"inherit"`：元素是否可编辑，继承了父元素的设置
+
+`Element.isContentEditable`属性返回一个布尔值，同样表示是否设置了`contenteditable`属性。该属性只读。
+
+### Element.attributes
+
+`Element.attributes`属性返回一个类似数组的对象，成员是当前元素节点的所有属性节点，详见《属性的操作》一章。
 
 ```javascript
-<script>
-  loadList()
-  
-  /*
-   * 加载分类列表数据
-   */
-  function loadList() {
-    $.ajax({
-      url: '/api/categories',
-      method: 'GET',
-      data: {},
-      dataType: 'json',
-      success: function (data) {
-        // 1. 判断数据是否正确
-        // 2. 使用模板引擎渲染列表数据
-        // 3. 把渲染结果替换到列表容器中
-        if (data.success) {
-          var htmlStr = template('list_template', {
-            listData: data.data
-          })
-          $('#list_container').html(htmlStr)
-        }
-      },
-      error: function (err) {
-        console.log('请求失败了', err)
-      }
-    })
-  }
-</script>
-```
+var p = document.querySelector('p');
+var attrs = p.attributes;
 
-总结：
-
-- 客户端发起请求，等待响应
-- 服务端收到请求
-- 服务端处理请求
-- 服务端发送响应
-- 客户端收到响应
-- 客户端根据响应结果进行后续处理
-
-### 删除分类
-
-一、通过事件委托方式为动态渲染的删除按钮添加点击事件
-
-- 第一种把添加事件的代码放到数据列表渲染之后
-- 第二种使用事件代理（委托）的方式
-
-```javascript
-...
-
-$('#list_container').on('click', 'a[name=delete]', handleDelete)
-
-...
-```
-
-二、在删除处理中发起 Ajax 请求删除操作
-
-```javascript
-function handleDelete() {
-  if (!window.confirm('确认删除吗？')) {
-    return
-  }
-  var id = $(this).data('id')
-  // 点击确定，发起 Ajax 请求，执行删除操作
-  $.ajax({
-    url: '/api/categories/delete',
-    method: 'GET',
-    data: {
-      id: id
-    },
-    dataType: 'json',
-    success: function (data) {
-      console.log(data)
-    },
-    error: function (err) {
-      console.log(err)
-    }
-  })
-  return false
+for (var i = attrs.length - 1; i >= 0; i--) {
+  console.log(attrs[i].name + '->' + attrs[i].value);
 }
 ```
 
-三、在服务端添加路由接口处理删除操作
+上面代码遍历`p`元素的所有属性。
+
+### Element.className，Element.classList
+
+`className`属性用来读写当前元素节点的`class`属性。它的值是一个字符串，每个`class`之间用空格分割。
+
+`classList`属性返回一个类似数组的对象，当前元素节点的每个`class`就是这个对象的一个成员。
 
 ```javascript
-router.get('/api/categories/delete', (req, res, next) => {
-  // 获取要删除的数据id
-  const { id } = req.query
+// HTML 代码 <div class="one two three" id="myDiv"></div>
+var div = document.getElementById('myDiv');
 
-  // 操作数据库，执行删除
-  db.query('DELETE FROM `ali_cate` WHERE `cate_id`=?', [id], (err, ret) => {
-    if (err) {
-      throw err
-    }
-    res.send({
-      success: true,
-      ret
-    })
-  })
-})
+div.className
+// "one two three"
+
+div.classList
+// {
+//   0: "one"
+//   1: "two"
+//   2: "three"
+//   length: 3
+// }
 ```
 
-四、客户端收到响应结果，判断如果删除成功，重新请求加载数据列表
+上面代码中，`className`属性返回一个空格分隔的字符串，而`classList`属性指向一个类似数组的对象，该对象的`length`属性（只读）返回当前元素的`class`数量。
+
+`classList`对象有下列方法。
+
+- `add()`：增加一个 class。
+- `remove()`：移除一个 class。
+- `contains()`：检查当前元素是否包含某个 class。
+- `toggle()`：将某个 class 移入或移出当前元素。
+- `item()`：返回指定索引位置的 class。
+- `toString()`：将 class 的列表转为字符串。
 
 ```javascript
-...
+var div = document.getElementById('myDiv');
 
-success: function (data) {
-  if (data.success) {
-    // 删除成功，重新加载列表数据
-    loadList()
-  }
-}
-
-...
-
+div.classList.add('myCssClass');
+div.classList.add('foo', 'bar');
+div.classList.remove('myCssClass');
+div.classList.toggle('myCssClass'); // 如果 myCssClass 不存在就加入，否则移除
+div.classList.contains('myCssClass'); // 返回 true 或者 false
+div.classList.item(0); // 返回第一个 Class
+div.classList.toString();
 ```
 
-
-
-### 添加分类
-
-基本步骤：
-
-1. 客户端发起请求，提交表单数据，等待服务端响应
-2. 服务端收到请求，处理请求，发送响应
-3. 客户端收到响应，根据响应结果进行后续处理
-
- 
-
-一、客户端发起添加请求
-
-- 表单的 submit 提交事件
-- 表单内容的获取 `$(表单).serialize()`
+下面比较一下，`className`和`classList`在添加和删除某个 class 时的写法。
 
 ```javascript
-// 表单提交
-//  submit 提交事件
-//  1. button 类型为 submit 的会触发
-//  2. 文本框敲回车也会触发
-$('#add_form').on('submit', handleAdd)
+var foo = document.getElementById('foo');
 
-function handleAdd() {
-  // serialize 会找到表单中所有的带有 name 的表单元素，提取对应的值，拼接成 key=value&key=value... 的格式数据
-  var formData = $('#add_form').serialize()
-  $.ajax({
-    url: '/api/categories/create',
-    method: 'POST',
-    data: formData,
-    // Content-Type 为 application/x-www-form-urlencoded
-    // data: { // data 为对象只是为了让你写起来方便，最终在发送给服务器的时候，$.ajax 还会把对象转换为 key=value&key=value... 的数据格式
-    // 普通的表单 POST 提交（没有文件），必须提交格式为 key=value&key=value... 数据，放到请求体中
-    //   key: value,
-    //   key2: value2
-    // },
-    dataType: 'json',
-    success: function (resData) {
-      console.log(resData)
-    },
-    error: function (error) {
-      console.log(error)
-    }
-  })
-  return false
+// 添加class
+foo.className += 'bold';
+foo.classList.add('bold');
+
+// 删除class
+foo.classList.remove('bold');
+foo.className = foo.className.replace(/^bold$/, '');
+```
+
+`toggle`方法可以接受一个布尔值，作为第二个参数。如果为`true`，则添加该属性；如果为`false`，则去除该属性。
+
+```javascript
+el.classList.toggle('abc', boolValue);
+
+// 等同于
+if (boolValue) {
+  el.classList.add('abc');
+} else {
+  el.classList.remove('abc');
 }
 ```
 
+### Element.dataset
 
-
-二、服务端处理请求
-
-1. 在 app.js 中配置解析表单 POST 请求体
-
-   参考 [body-parser](https://github.com/expressjs/body-parser) 文档进行配置。
-
-2. 执行数据库操作和发送响应数据
-
-```javascript
-/**
- * 添加分类
- */
-router.post('/api/categories', (req, res, next) => {
-  // 1. 获取表单 POST 数据
-  const body = req.body
-  // 2. 操作数据库
-  db.query(
-    'INSERT INTO `ali_cate` SET `cate_name`=?, `cate_slug`=?',
-    [body.cate_name, body.cate_slug],
-    (err, ret) => {
-      if (err) {
-        return next(err)
-      }
-      // 3. 发送响应
-      res.status(200).json({
-        success: true
-      })
-    })
-})
-```
-
-三、客户端收到响应，后续处理
-
-- 判断响应是否正确
-- 如果正确，则重新加载最新的列表数据，清空表单内容
-
-```javascript
-...
-
-success: function (resData) {
-  if (data.success) {
-    // 添加成功，重新加载列表数据
-    loadList()
-    
-    // 清空表单内容
-		$('#add_form').find('input[name]').val('')
-  }
-}
-
-...
-```
-
-
-
-### 编辑分类
-
-#### 动态显示编辑模态框
-
-一、点击编辑，弹出模态框
-
-- Bootstrap 自带的 JavaScript 组件：模态框
-
-二、发起 Ajax 请求，获取 id=xxx 的分类数据
-
-三、服务端收到请求，获取 id，操作数据库，发送响应
-
-四、客户端收到服务端响应，进行后续处理
-
-#### 提交编辑表单完成编辑操作
-
-一、注册编辑表单的提交事件
-
-二、在提交事件中，获取表单数据，发送 Ajax  `POST`请求 `/api/categories/update`，提交的数据放到请求体中
-
-- **表单隐藏域的使用**
-
-三、服务端收到请求，获取查询字符串中的 id，获取请求体，执行数据库修改数据操作，发送响应
-
-四、客户端收到响应，根据响应结果做后续处理
-
-
-
-## 简单优化
-
-
-
-### 客户端表单数据验证
-
-- 自己写，自己判断
-  - if-else 正则表达式，直接上
-- [HTML5 表单验证](https://developer.mozilla.org/zh-CN/docs/Learn/HTML/Forms/Data_form_validation)
-  - 有兼容性问题
-  - 可以在兼容性比较好的移动端去使用
-  - 简单的校验需求就能满足
-- 基于 jQuery 的表单验证插件
-  - 官方文档：https://jqueryvalidation.org/
-  - Github 仓库：https://github.com/jquery-validation/jquery-validation
-  - 菜鸟教程翻译的一个参考文档：http://www.runoob.com/jquery/jquery-plugin-validate.html
-
-### 服务端数据验证
-
-- 基本数据校验
-- 业务数据校验
-
-
-
-### 客户端统一错误处理
-
-- 利用 jQuery 提供的全局 Ajax 事件处理函数：https://api.jquery.com/category/ajax/global-ajax-event-handlers/
-
-## 用户管理
-
-### 用户列表
-
-1. 添加路由，渲染 admin/users.html 页面
-2. 在 users.html 页面中套用模板页
-
-几个小点：
-
-- 把 art-template 文件资源的引用放到模板页中
-- 把修改模板引擎默认语法规则的代码放到模板页中
-- 把注册的全局 Ajax 错误处理方法放到模板页中
-
-### 添加用户
-
-#### jQuery Validation Plugin 表单验证
-
-- [官网](https://jqueryvalidation.org/)
-- [Github 仓库](https://github.com/jquery-validation/jquery-validation)
-- [菜鸟教程](http://www.runoob.com/jquery/jquery-plugin-validate.html)
-
-安装
-
-```bash
-npm i jquery-validation
-```
-
-加载
+网页元素可以自定义`data-`属性，用来添加数据。
 
 ```html
-<script src="jquery.js"></script>
-<script src="jquery.validate.js"></script>
-<!-- jquery-validation 默认的提示消息是英文，引入该文件让其显式中文 -->
-<script src="messages_zh.js"></script>
+<div data-timestamp="1522907809292"></div>
 ```
 
-配置验证规则
+上面代码中，`<div>`元素有一个自定义的`data-timestamp`属性，用来为该元素添加一个时间戳。
+
+`Element.dataset`属性返回一个对象，可以从这个对象读写`data-`属性。
+
+```javascript
+// <article
+//   id="foo"
+//   data-columns="3"
+//   data-index-number="12314"
+//   data-parent="cars">
+//   ...
+// </article>
+var article = document.getElementById('foo');
+article.dataset.columns // "3"
+article.dataset.indexNumber // "12314"
+article.dataset.parent // "cars"
+```
+
+注意，`dataset`上面的各个属性返回都是字符串。
+
+HTML 代码中，`data-`属性的属性名，只能包含英文字母、数字、连词线（`-`）、点（`.`）、冒号（`:`）和下划线（`_`）。它们转成 JavaScript 对应的`dataset`属性名，规则如下。
+
+- 开头的`data-`会省略。
+- 如果连词线后面跟了一个英文字母，那么连词线会取消，该字母变成大写。
+- 其他字符不变。
+
+因此，`data-abc-def`对应`dataset.abcDef`，`data-abc-1`对应`dataset["abc-1"]`。
+
+除了使用`dataset`读写`data-`属性，也可以使用`Element.getAttribute()`和`Element.setAttribute()`，通过完整的属性名读写这些属性。
+
+```javascript
+var mydiv = document.getElementById('mydiv');
+
+mydiv.dataset.foo = 'bar';
+mydiv.getAttribute('data-foo') // "bar"
+```
+
+### Element.innerHTML
+
+`Element.innerHTML`属性返回一个字符串，等同于该元素包含的所有 HTML 代码。该属性可读写，常用来设置某个节点的内容。它能改写所有元素节点的内容，包括`<HTML>`和`<body>`元素。
+
+如果将`innerHTML`属性设为空，等于删除所有它包含的所有节点。
+
+```javascript
+el.innerHTML = '';
+```
+
+上面代码等于将`el`节点变成了一个空节点，`el`原来包含的节点被全部删除。
+
+注意，读取属性值的时候，如果文本节点包含`&`、小于号（`<`）和大于号（`>`），`innerHTML`属性会将它们转为实体形式`&amp;`、`&lt;`、`&gt;`。如果想得到原文，建议使用`element.textContent`属性。
+
+```javascript
+// HTML代码如下 <p id="para"> 5 > 3 </p>
+document.getElementById('para').innerHTML
+// 5 &gt; 3
+```
+
+写入的时候，如果插入的文本包含 HTML 标签，会被解析成为节点对象插入 DOM。注意，如果文本之中含有`<script>`标签，虽然可以生成`script`节点，但是插入的代码不会执行。
+
+```javascript
+var name = "<script>alert('haha')</script>";
+el.innerHTML = name;
+```
+
+上面代码将脚本插入内容，脚本并不会执行。但是，`innerHTML`还是有安全风险的。
+
+```javascript
+var name = "<img src=x onerror=alert(1)>";
+el.innerHTML = name;
+```
+
+上面代码中，`alert`方法是会执行的。因此为了安全考虑，如果插入的是文本，最好用`textContent`属性代替`innerHTML`。
+
+### Element.outerHTML
+
+`Element.outerHTML`属性返回一个字符串，表示当前元素节点的所有 HTML 代码，包括该元素本身和所有子元素。
+
+```javascript
+// HTML 代码如下
+// <div id="d"><p>Hello</p></div>
+var d = document.getElementById('d');
+d.outerHTML
+// '<div id="d"><p>Hello</p></div>'
+```
+
+`outerHTML`属性是可读写的，对它进行赋值，等于替换掉当前元素。
+
+```javascript
+// HTML 代码如下
+// <div id="container"><div id="d">Hello</div></div>
+var container = document.getElementById('container');
+var d = document.getElementById('d');
+container.firstChild.nodeName // "DIV"
+d.nodeName // "DIV"
+
+d.outerHTML = '<p>Hello</p>';
+container.firstChild.nodeName // "P"
+d.nodeName // "DIV"
+```
+
+上面代码中，变量`d`代表子节点，它的`outerHTML`属性重新赋值以后，内层的`div`元素就不存在了，被`p`元素替换了。但是，变量`d`依然指向原来的`div`元素，这表示被替换的`DIV`元素还存在于内存中。
+
+注意，如果一个节点没有父节点，设置`outerHTML`属性会报错。
+
+```javascript
+var div = document.createElement('div');
+div.outerHTML = '<p>test</p>';
+// DOMException: This element has no parent node.
+```
+
+上面代码中，`div`元素没有父节点，设置`outerHTML`属性会报错。
+
+### Element.clientHeight，Element.clientWidth
+
+`Element.clientHeight`属性返回一个整数值，表示元素节点的 CSS 高度（单位像素），只对块级元素生效，对于行内元素返回`0`。如果块级元素没有设置 CSS 高度，则返回实际高度。
+
+除了元素本身的高度，它还包括`padding`部分，但是不包括`border`、`margin`。如果有水平滚动条，还要减去水平滚动条的高度。注意，这个值始终是整数，如果是小数会被四舍五入。
+
+`Element.clientWidth`属性返回元素节点的 CSS 宽度，同样只对块级元素有效，也是只包括元素本身的宽度和`padding`，如果有垂直滚动条，还要减去垂直滚动条的宽度。
+
+`document.documentElement`的`clientHeight`属性，返回当前视口的高度（即浏览器窗口的高度），等同于`window.innerHeight`属性减去水平滚动条的高度（如果有的话）。`document.body`的高度则是网页的实际高度。一般来说，`document.body.clientHeight`大于`document.documentElement.clientHeight`。
+
+```javascript
+// 视口高度
+document.documentElement.clientHeight
+
+// 网页总高度
+document.body.clientHeight
+```
+
+### Element.clientLeft，Element.clientTop
+
+`Element.clientLeft`属性等于元素节点左边框（left border）的宽度（单位像素），不包括左侧的`padding`和`margin`。如果没有设置左边框，或者是行内元素（`display: inline`），该属性返回`0`。该属性总是返回整数值，如果是小数，会四舍五入。
+
+`Element.clientTop`属性等于网页元素顶部边框的宽度（单位像素），其他特点都与`clientLeft`相同。
+
+### Element.scrollHeight，Element.scrollWidth
+
+`Element.scrollHeight`属性返回一个整数值（小数会四舍五入），表示当前元素的总高度（单位像素），包括溢出容器、当前不可见的部分。它包括`padding`，但是不包括`border`、`margin`以及水平滚动条的高度（如果有水平滚动条的话），还包括伪元素（`::before`或`::after`）的高度。
+
+`Element.scrollWidth`属性表示当前元素的总宽度（单位像素），其他地方都与`scrollHeight`属性类似。这两个属性只读。
+
+整张网页的总高度可以从`document.documentElement`或`document.body`上读取。
+
+```javascript
+// 返回网页的总高度
+document.documentElement.scrollHeight
+document.body.scrollHeight
+```
+
+注意，如果元素节点的内容出现溢出，即使溢出的内容是隐藏的，`scrollHeight`属性仍然返回元素的总高度。
+
+```javascript
+// HTML 代码如下
+// <div id="myDiv" style="height: 200px; overflow: hidden;">...<div>
+document.getElementById('myDiv').scrollHeight // 356
+```
+
+上面代码中，即使`myDiv`元素的 CSS 高度只有200像素，且溢出部分不可见，但是`scrollHeight`仍然会返回该元素的原始高度。
+
+### Element.scrollLeft，Element.scrollTop
+
+`Element.scrollLeft`属性表示当前元素的水平滚动条向右侧滚动的像素数量，`Element.scrollTop`属性表示当前元素的垂直滚动条向下滚动的像素数量。对于那些没有滚动条的网页元素，这两个属性总是等于0。
+
+如果要查看整张网页的水平的和垂直的滚动距离，要从`document.documentElement`元素上读取。
+
+```javascript
+document.documentElement.scrollLeft
+document.documentElement.scrollTop
+```
+
+这两个属性都可读写，设置该属性的值，会导致浏览器将当前元素自动滚动到相应的位置。
+
+### Element.offsetParent
+
+`Element.offsetParent`属性返回最靠近当前元素的、并且 CSS 的`position`属性不等于`static`的上层元素。
 
 ```html
-<form id="form">
-  <input type="text" name="username" required>
-  <input type="password" name="password" required minlength="6" maxlength="18">
-</form>
+<div style="position: absolute;">
+  <p>
+    <span>Hello</span>
+  </p>
+</div>
 ```
 
-注册验证
+上面代码中，`span`元素的`offsetParent`属性就是`div`元素。
 
-```javascript
-// 该方法会自动监听表单的提交行为
-// 当你提交表单的时候，它就根据你在表单控件中设置的验证规则，进行验证
-// 如果验证失败，就在界面上给出提示
-// 如果验证通过，则调用 submitHandler 方法，所以我们可以把请求服务端提交数据的代码写到 submitHandler 中
-$('#form').validate({
-  submitHandler: function (form) { // form 就是验证的表单 DOM 对象
-  	console.log('验证通过')
-	}
-})
-```
+该属性主要用于确定子元素位置偏移的计算基准，`Element.offsetTop`和`Element.offsetLeft`就是`offsetParent`元素计算的。
 
-除了将验证规则写到标签上，页可以将验证规则写到 JavaScript 中（推荐，js更灵活）
-
-```javascript
-$("#signupForm").validate({
-  rules: {
-    firstname: "required",
-    lastname: "required",
-    username: {
-      required: true,
-      minlength: 2
-    },
-    password: {
-      required: true,
-      minlength: 5
-    },
-    confirm_password: {
-      required: true,
-      minlength: 5,
-      equalTo: "#password"
-    },
-    email: {
-      required: true,
-      email: true
-    },
-    topic: {
-      required: "#newsletter:checked",
-      minlength: 2
-    },
-    agree: "required"
-  }
-})
-
-```
-
-
-
-如果想自定义错误提示消息，则可以通过 `messages` 选项自定义
-
-```javascript
-$("#signupForm").validate({
-  rules: {
-    firstname: "required",
-    lastname: "required",
-    username: {
-      required: true,
-      minlength: 2
-    },
-    password: {
-      required: true,
-      minlength: 5
-    },
-    confirm_password: {
-      required: true,
-      minlength: 5,
-      equalTo: "#password"
-    },
-    email: {
-      required: true,
-      email: true
-    },
-    topic: {
-      required: "#newsletter:checked",
-      minlength: 2
-    },
-    agree: "required"
-  },
-  messages: {
-    firstname: "请输入您的名字",
-    lastname: "请输入您的姓氏",
-    username: {
-      required: "请输入用户名",
-      minlength: "用户名必需由两个字母组成"
-    },
-    password: {
-      required: "请输入密码",
-      minlength: "密码长度不能小于 5 个字母"
-    },
-    confirm_password: {
-      required: "请输入密码",
-      minlength: "密码长度不能小于 5 个字母",
-      equalTo: "两次密码输入不一致"
-    },
-    email: "请输入一个正确的邮箱",
-    agree: "请接受我们的声明",
-    topic: "请选择两个主题"
-  }
-})
-
-```
-
-自定义错误提示文本样式
-
-```css
-form label.error {
-	color: red !important;
-}
-
-form input.error {
-  border: 1px solid red !important;
-}
-
-form input.valid {
-  border: 1px solid green !important;
-  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-}
-
-```
-
-
-
-异步验证（只是提高用户体验，减小服务器压力）
-
-- remote
-  - 指定一个接口地址，它会自动发请求
-  - 要求接口返回 true 或者 false
-  - true 验证通过
-  - false 验证失败
-- 接口
-  - 返回 true 或者 false
-
-
-
-### 删除用户
-
-### 编辑用户
-
-### 密码加密问题
-
-哈希散列算法Hash
-是把任意长度的输入（又叫做预映射pre-image）通过散列算法变换成固定长度的输出
-输出就是散列值
-不可能从散列值来确定唯一的输入值，说白了就是不能解密
-
-哈希特点：
-- 只能加，不能解
-- 相同的字符串得到的加密结果永远是一样的
-- 用户登录
-  - 把用户输入的明文加密然后和数据库存储的密码进行比对
-
-常用 hash  算法
-
-- md4
-- md5
-- sha1
-- ...
-
-e10adc3949ba59abbe56e057f20f883e
-
-Hash 破解问题,暴力破解，穷举尝试
-1 dsajbfdjbsafsa
-2 bdsabdkjsab
-3 bdsjab kjdsa
-4 djsabdsa
-12 djsabdjsa
-123 djsabjdbsa
-123456 e10adc3949ba59abbe56e057f20f883e
-1@23465 e10adc3949ba59abbe56e057f20f88ddsa
-1@23465 ysyhljt
-
-## 用户登录
-
-- 基本登录流程处理
-
-  - 校验用户名是否存在
-  - 校验密码是否正确
-
-- 记录用户登录状态
-
-- 基本的页面访问权限认真，如果用户没有登录，则让用户跳转到登录页面进行登录
-
-  ![用户登录处理流程](http://assets.processon.com/chart_image/5c419e62e4b056ae29f51eab.png)
-
-## 找回密码（*）
-
-- [找回密码的功能设计](http://www.ruanyifeng.com/blog/2019/02/password.html)
-
-## 状态保持
-
-### Cookie 和 Session
-
-- HTTP 协议本身是无状态的
-- Cookie 发橘子，往背后贴纸条
-  - 纸条就是Cookie
-  - Cookie 是存储在客户端
-  - 不适合存储涉及安全敏感数据
-  - 有大小限制，2kb
-- Session 超市存物柜，东西放到柜子里，你拿着小票
-  - 超市服务器，你就是客户端
-  - 你去超市购物，就是会话的一个过程
-  - 存物柜在超市，也就是说 Session 是把数据存储在服务器
-  - 超市签发生成一个小票给你，以 Cookie 的方式保存在客户端
-  - 小票由服务端签发生成，每个小票都不一样，所以客户端无法轻易伪造
-  - Session 是基于 Cookie 实现的
-  - Cookie 中存储访问 Session 数据的凭证
-  - 每个人的 Cookie 凭证都不一样
-  - 由于凭证是服务器签发生成的，所以客户端无法轻易伪造
-
-### 使用 Session 存储登录状态
-
-> 参考文档：https://github.com/expressjs/session
-
-1. 安装
-
-```bash
-npm i express-session
-```
-
-2. 配置
-
-```javascript
-...
-const session = require('express-session')
-
-app.use(session({
-  // 生成密文是有一套算法的来计算生成密文，如果网站都使用默认的密文生成方式， 就会有一定的重复和被破解的概率，所以为了增加这个安全性，算法对外暴露了一个混入私钥的接口，算法在生成密文的时候会混入我们添加的自定义成分
-  secret: 'itcast',
-  resave: false,
-  // 如果为 true 无论是否往 Session 中存储数据，都直接给客户端发送一个 Cookie 小票
-  // 如果为 false，则只有在往 Session 中写入数据的时候才会下发小票
-  // 推荐设置为 true
-  saveUninitialized: true
-}))
-
-...
-```
-
-3. 使用
-
-```javascript
-// 存储 Session 数据
-// 就想操作对象一样，往 Session 中写数据
-req.session.名字 = 值
-
-// 读取 Session 中的数据
-// 就是读取对象成员一样，读取 Session 中的数据
-req.session.名字
-```
-
-4. 这里我们需要在用户登录成功以后记录用户的登录状态
-
-```javascript
-router.post('/api/users/login', (req, res, next) => {
-  ...
-  ...
-  ...
-  
-  // 将用户登录状态记录到 Session 中
-  // user 就是我们从数据库中查询到的用户数据对象
-  req.session.user = user
-
-  res.status(200).json({
-    success: true,
-    message: '登录成功'
-  })
-})
-
-```
-
-
-
-### 页面访问权限控制
-
-简单一点，直接在处理页面渲染的路由中进行判定，如果没有登录，则让其跳转到登录页，否则，正常渲染页面
-
-```javascript
-router.get('/admin', (req, res) => {
-  const sessionUser = req.session.user
-
-  if (!sessionUser) {
-    return res.redirect('/admin/login')
-  }
-
-  res.render('admin/index.html')
-})
-```
-
-如果在每一个需要验证的页面访问路由中都做上面那样的判定就会很麻烦，所以我们可以利用中间件的方式来统一处理页面的登录状态校验
-
-```javascript
-/**
- * 统一控制后台管理系统的页面访问权限
- * 相当于为所有以 /admin/xxxxx 开头的请求设置了一道关卡
- * 
- */
-app.use('/admin', (req, res, next) => {
-  // 1. 如果是登录页面 /admin/login，允许通过
-  if (req.originalUrl === '/admin/login') {
-    // 这里 next() 就会往后匹配调用到我们的那个能处理 /admin/login 的路由
-    return next()
-  }
-
-  // 2. 其他页面都一律验证登录状态
-  const sessionUser = req.session.user
-  //    如果没有登录页， 让其重定向到登录页
-  if (!sessionUser) {
-    return res.redirect('/admin/login')
-  }
-
-  // 如果登录了，则允许通过
-  // 这里调用 next 就是调用与当前请求匹配的下一个中间件路由函数
-  // 例如，当前请求是 /admin/users ，则 next 会找到我们那个匹配 /admin/users 的路由去处理
-  //                  /admin/categories ，则 next 会找到我们添加的那个 /admin/categories 的路由去处理
-  next()
-})
-
-```
-
-为了好维护，建议将这种中间件处理封装到独立的模块中，这里我们把这个处理过程封装到了 `middlewares/check-login.js` 文件模块中
-
-```javascript
-module.exports = (req, res, next) => { // 所有以 /admin/ 开头的请求都会进入这个中间件
-  // 1. 如果是 /admin/login 则直接允许通过
-  if (req.originalUrl === '/admin/login') {
-    return next()
-  }
-
-  // 2. 非 /admin/login 的页面都校验登录状态
-  const sessionUser = req.session.user
-  // 2.1 如果没有则让其去登录
-  if (!sessionUser) {
-    return res.redirect('/admin/login')
-  }
-  
-  // 2.2 如果登录了则让其通过
-  next()
-}
-
-```
-
-然后在 `app.js` 中挂载这个中间件
-
-```javascript
-...
-const checkLogin = require('./middlewares/check-login.js')
-...
-
-app.use('/admin', checkLogin)
-...
-```
-
-
-
-### 用户退出
-
-首先实现用户退出数据接口
-
-```javascript
-/**
- * 用户退出
- */
-router.get('/admin/users/logout', (req, res) => {
-  // 1. 清除登录状态
-  delete req.session.user
-  
-  // 2. 记录用户的退出时间
-  
-  // 2. 跳转到登录页
-  res.redirect('/admin/login')
-})
-
-```
-
-然后将顶部的退出按钮的链接指向数据接口
+如果该元素是不可见的（`display`属性为`none`），或者位置是固定的（`position`属性为`fixed`），则`offsetParent`属性返回`null`。
 
 ```html
-...
-<li><a href="/admin/users/logout"><i class="fa fa-sign-out"></i>退出</a></li>
-...
+<div style="position: absolute;">
+  <p>
+    <span style="display: none;">Hello</span>
+  </p>
+</div>
 ```
 
-`delete` 是 JavaScript 的一个关键字，用来删除对象成员的
+上面代码中，`span`元素的`offsetParent`属性是`null`。
 
-![1551859111822](./assets/1551859111822.png)
+如果某个元素的所有上层节点的`position`属性都是`static`，则`Element.offsetParent`属性指向`<body>`元素。
 
-### Session 数据持久化
+### Element.offsetHeight，Element.offsetWidth
 
-> 参考文档：https://github.com/chill117/express-mysql-session
+`Element.offsetHeight`属性返回一个整数，表示元素的 CSS 垂直高度（单位像素），包括元素本身的高度、padding 和 border，以及水平滚动条的高度（如果存在滚动条）。
 
-Session 数据持久化的目的是为了解决服务器重启或者崩溃挂掉导致的 Session 数据丢失的问题。
+`Element.offsetWidth`属性表示元素的 CSS 水平宽度（单位像素），其他都与`Element.offsetHeight`一致。
 
-因为默认情况下 Session 数据是存储在内存中的，服务器一旦重启就会导致 Session 数据丢失。
+这两个属性都是只读属性，只比`Element.clientHeight`和`Element.clientWidth`多了边框的高度或宽度。如果元素的 CSS 设为不可见（比如`display: none;`），则返回`0`。
 
-所了我们为了解决这个问题，把 Session 数据存储到了数据库中。
+### Element.offsetLeft，Element.offsetTop
 
-1. 安装
+`Element.offsetLeft`返回当前元素左上角相对于`Element.offsetParent`节点的水平位移，`Element.offsetTop`返回垂直位移，单位为像素。通常，这两个值是指相对于父节点的位移。
 
-```bash
-npm i express-mysql-session
-```
-
-2. 配置
+下面的代码可以算出元素左上角相对于整张网页的坐标。
 
 ```javascript
-...
-
-const session = require('express-session')
-
-/**
- * 配置 Session 数据持久化
- * 参考文档：https://github.com/chill117/express-mysql-session#readme
- * 该插件会自动往数据库中创建一个 sessions 表，用来存储 Session 数据
- */
-
-const MySQLStore = require('express-mysql-session')(session)
-
-const sessionStore = new MySQLStore({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '123456',
-  database: 'alishow62'
-})
-
-const app = express()
-
-app.use(session({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  store: sessionStore, // 告诉 express-session 中间件，使用 sessionStore 持久化 Session 数据
-}))
-
-...
-```
-
-### 展示当前登录用户信息
-
-> 参考文档：http://expressjs.com/en/4x/api.html#app.locals
-
-
-
-简单点就是在每一次 render 页面的时候，把 `req.session.user` 传到模板中去使用。
-
-当你需要在多个模板中使用相同的模板数据的时候，每一次 render 传递就麻烦了。所以 express  提供了一种简单的方式，我们可以把模板中公用的数据放到 `app.locals` 中。`app.locals` 中的数据可以在模板中直接使用。
-
-```javascript
-app.use('/admin', checkLogin, (req, res, next) => { // 只有在 checkLogin 中 next 了，才会执行这个中间件
-  app.locals.sessionUser = req.session.user
-  next()
-})
-
-```
-
-
-
-### 记住我（*）
-
-![记住我处理流程](http://assets.processon.com/chart_image/5c419ffce4b048f108d5ce97.png)
-
-对称加解密：加解密使用的私钥必须一致。
-
-加密：
-
-```javascript
-const crypto = require('crypto');
-const cipher = crypto.createCipher('aes192', '私钥');
-
-let encrypted = cipher.update('要加密的数据', 'utf8', 'hex');
-encrypted += cipher.final('hex');
-console.log(encrypted);
-// Prints: ca981be48e90867604588e75d04feabb63cc007a8f8ad89b10616ed84d815504
-```
-
-解密：
-
-```javascript
-const crypto = require('crypto');
-const decipher = crypto.createDecipher('aes192', '私钥');
-
-const encrypted =
-    '要解密的数据';
-let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-decrypted += decipher.final('utf8');
-console.log(decrypted);
-// Prints: some clear text data
-```
-
-## 文章管理
-
-### 添加文章
-
-一、客户端表单提交（带有文件的POST请求）处理
-
-```javascript
-function handleSubmit() {
-  // 1. 获取表单数据
-  // multipart/form-data
-  var formEl = $('#new_form')
-  var formData = new FormData(formEl.get(0))
-
-  // 2. 表单提交
-  $.ajax({
-    url: '/api/posts/create',
-    type: 'POST',
-    data: formData,
-    processData: false,  // 不处理数据
-    contentType: false,   // 不设置内容类型
-    success: function (resData) {
-      // 3. 根据响应结果做后续处理
-      console.log(resData)
-    },
-    error: function (err) {
-      console.log(err)
-    }
-  })
-  return false
-}
-
-```
-
-二、服务端接口处理
-
-1. express 本身不处理文件上传
-2. 使用 [multer]() 处理带有文件的表单 POST 请求
-
-基本用法：（try-try-see）
-
-1. 安装
-
-```javascript
-npm i multer
-```
-
-2. 基本示例
-
-```javascript
-var express = require('express')
-var multer  = require('multer')
-var upload = multer({ dest: 'uploads/' }) // 指定上传文件的存储路径
-
-var app = express()
-
-// /profile 是带有文件的 POST 请求，使用 multer 解析文件上传
-// upload.single() 需要给定一个参数：告诉multer，请求体中哪个字段是文件
-app.post('/profile', upload.single('avatar'), function (req, res, next) {
-  // req.file 是 `avatar` 文件的相关信息（原本的文件名，新的唯一名称，文件保存路径，文件大小...)
-  // req.body 是请求体中的那些普通的文本字段
-  // 数据库中不存储文件，文件还是存储在磁盘上，数据库中存储文件在我们 Web 服务中的 url 资源路径
-})
-
-```
-
-3. multer 保存的文件默认没有后缀名，如果需要的话，就需要下面这样来使用
-
-```javascript
-var storage = multer.diskStorage({
-  // 可以动态处理文件的保存路径
-  destination: function (req, file, cb) {
-    cb(null, '/tmp/my-uploads')
-  },
-  // 动态的处理保存的文件名
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now()) // 这里的关键是这个时间戳，能保证文件名的唯一性（不严谨）
+function getElementPosition(e) {
+  var x = 0;
+  var y = 0;
+  while (e !== null)  {
+    x += e.offsetLeft;
+    y += e.offsetTop;
+    e = e.offsetParent;
   }
-})
-
-var upload = multer({ storage: storage })
-
-app.post('/profile', upload.single('avatar'), function (req, res, next) {
-  // req.file 是 `avatar` 文件的相关信息（原本的文件名，新的唯一名称，文件保存路径，文件大小...)
-  // req.body 是请求体中的那些普通的文本字段
-  // 数据库中不存储文件，文件还是存储在磁盘上，数据库中存储文件在我们 Web 服务中的 url 资源路径
-})
-```
-
-4. 处理多文件
-
-有多个名字都一样的 file 类型的 input
-
-```javascript
-app.post('/photos/upload', upload.array('photos', 12), function (req, res, next) {
-  // req.files is array of `photos` files
-  // req.body will contain the text fields, if there were any
-})
-```
-
-处理多个不同名字的 file 类型的 input：
-
-```java
-var cpUpload = upload.fields([{ name: 'avatar', maxCount: 1 }, { name: 'gallery', maxCount: 8 }])
-app.post('/cool-profile', cpUpload, function (req, res, next) {
-  // req.files is an object (String -> Array) where fieldname is the key, and the value is array of files
-  //
-  // e.g.
-  //  req.files['avatar'][0] -> File
-  //  req.files['gallery'] -> Array
-  //
-  // req.body will contain the text fields, if there were any
-})
-```
-
-
-
-
-
-#### 富文本编辑器 wangEditor
-
-常见的富文本编辑器：
-
-- [Ueditor](https://ueditor.baidu.com/website/)
-- [CKeditor](https://ckeditor.com/)
-- [Quill](https://quilljs.com/)
-- [wangEditor](http://www.wangeditor.com/)
-- 太多了...
-
-
-
-这里我们以使用 wangEditor 为例：
-
-- github 仓库地址：https://github.com/wangfupeng1988/wangEditor
-- 官网：http://www.wangeditor.com/
-- 使用文档：http://www.kancloud.cn/wangfupeng/wangeditor3/332599
-- 下载
-- 使用
-- 配置
-
-
-
-富文本编辑器图片上传
-
-![1551870035033](./assets/1551870035033.png)
-
-### 文章列表
-
-### 批量删除文章
-
-客户端
-
-```javascript
-function handleBatchDelete() {
-  if (!window.confirm('确认删除吗?')) {
-    return
-  }
-  // 1. 找到所有选中行的数据项 id
-  var ids = []
-  $('#posts_container tr input[name=checkbox1]').each(function (index, item) {
-    if (item.checked) {
-      // $(item).data('id')
-      ids.push(item.dataset.id)
-    }
-  })
-
-  // 2. 发请求，等待响应
-  $.ajax({
-    url: '/api/posts/delete',
-    method: 'GET',
-    data: {
-      id: ids.join(',')
-    },
-    dataType: 'json',
-    success: function (resData) {
-      if (resData.success) {
-        // 刷新当前网页，重新渲染数据列表
-        window.location.reload()
-      }
-    },
-    error: function (err) {
-      console.log(err)
-    }
-  })
-  // 3. 根据响应结果进行后续处理
+  return {x: x, y: y};
 }
 ```
 
-数据接口
+### Element.style
+
+每个元素节点都有`style`用来读写该元素的行内样式信息，具体介绍参见《CSS 操作》一章。
+
+### Element.children，Element.childElementCount
+
+`Element.children`属性返回一个类似数组的对象（`HTMLCollection`实例），包括当前元素节点的所有子元素。如果当前元素没有子元素，则返回的对象包含零个成员。
 
 ```javascript
-/**
- * 批量删除文章
- */
-router.get('/api/posts/delete', (req, res, next) => {
-  // 1. 获取要删除的数据 id
-  const { id } = req.query
-  console.log(id) // 1,2,3,4,5
-  
-  // 2. 数据库操作
-  db.query(`DELETE FROM ali_article WHERE article_id IN(${id})`, (err, ret) => {
-    if (err) {
-      return next(err)
+if (para.children.length) {
+  var children = para.children;
+    for (var i = 0; i < children.length; i++) {
+      // ...
     }
-
-    // 3. 发送响应
-    res.status(200).json({
-      success: true
-    })
-  })
-})
-```
-
-
-
-### 编辑文章
-
-#### 动态显示编辑文章页面
-
-这里我们可以直接使用服务端渲染的方式动态渲染编辑文章页面
-
-```javascript
-router.get('/admin/posts/edit', (req, res, next) => {
-  db.query('SELECT * FROM `ali_article` WHERE `article_id`=?', [req.query.id], (err, ret) => {
-    if (err) {
-      return next(err)
-    }
-    db.query('SELECT * FROM `ali_cate`', (err, categories) => {
-      if (err) {
-        return next(err)
-      }
-      res.render('admin/posts-edit.html', {
-        post: ret[0], // 文章详情
-        categories // 分类列表
-      })
-    })
-  })
-})
-```
-
-然后在 `posts-edit.html` 页面绑定 `post` 和 `categories` 数据。
-
-#### 提交编辑
-
-客户端
-
-```javascript
-function handleAdd() {
-  var formData = $('#add_form').serialize()
-
-  // 方式1，自己拼
-  formData += '&article_body=' + editor.txt.html()
-
-  // 方式2：将富文本编辑器的容器改为 textarea
-  //        参考文档：https://www.kancloud.cn/wangfupeng/wangeditor3/430149
-  $.ajax({
-    url: '/api/posts/edit?id=' + $('#article_id').val(),
-    method: 'POST',
-    data: formData,
-    dataType: 'json',
-    success: function (resData) {
-      if (resData.success) {
-        window.alert('修改成功')
-      }
-    },
-    error: function (err) {
-      console.log(err)
-    }
-  })
 }
 ```
 
+上面代码遍历了`para`元素的所有子元素。
 
+这个属性与`Node.childNodes`属性的区别是，它只包括元素类型的子节点，不包括其他类型的子节点。
 
-没有选新文件的表单提交
+`Element.childElementCount`属性返回当前元素节点包含的子元素节点的个数，与`Element.children.length`的值相同。
 
-![1552019045020](./assets/1552019045020.png)
+### Element.firstElementChild，Element.lastElementChild
 
-有文件的表单数据
+`Element.firstElementChild`属性返回当前元素的第一个元素子节点，`Element.lastElementChild`返回最后一个元素子节点。
 
-![1552019250524](./assets/1552019250524.png)
+如果没有元素子节点，这两个属性返回`null`。
 
-最后，在接口中就判断是否有 new_file，如果有就用，如果没有就用 盘original_file。
+### Element.nextElementSibling，Element.previousElementSibling
 
-服务端处理
+`Element.nextElementSibling`属性返回当前元素节点的后一个同级元素节点，如果没有则返回`null`。
 
 ```javascript
-/**
- * 编辑文章
- */
-router.post('/api/posts/edit', (req, res, next) => {
-  const { id } = req.query
-  const body = req.body
-  db.query(
-    'UPDATE `ali_article` SET `article_title`=?, `article_body`=?, `article_cateid`=?, `article_slug`=?, `article_addtime`=?, `article_status`=?, `article_file`=? WHERE `article_id`=?',
-    [
-      body.article_title,
-      body.article_body,
-      body.article_cateid,
-      body.article_slug,
-      body.article_addtime,
-      body.article_status,
-      body.new_file || body.original_file,
-      id
-    ],
-    (err, ret) => {
-      if (err) {
-        return next(err)
-      }
-      res.status(200).json({
-        success: true
-      })
-    }
-  )
-})
+// HTML 代码如下
+// <div id="div-01">Here is div-01</div>
+// <div id="div-02">Here is div-02</div>
+var el = document.getElementById('div-01');
+el.nextElementSibling
+// <div id="div-02">Here is div-02</div>
 ```
 
+`Element.previousElementSibling`属性返回当前元素节点的前一个同级元素节点，如果没有则返回`null`。
 
+## 实例方法
 
-### 删除文章
+### 属性相关方法
 
-## 网站设置
+元素节点提供六个方法，用来操作属性。
 
-## 个人中心
+- `getAttribute()`：读取某个属性的值
+- `getAttributeNames()`：返回当前元素的所有属性名
+- `setAttribute()`：写入属性值
+- `hasAttribute()`：某个属性是否存在
+- `hasAttributes()`：当前元素是否有属性
+- `removeAttribute()`：删除属性
 
-## 轮播广告管理
+这些方法的介绍请看《属性的操作》一章。
 
+### Element.querySelector()
 
+`Element.querySelector`方法接受 CSS 选择器作为参数，返回父元素的第一个匹配的子元素。如果没有找到匹配的子元素，就返回`null`。
 
-## 发布上线
-
-- 24 小时不关机的电脑
-  - 云服务
-
-- 服务器操作系统
-  - Windows（Windows Server / win7 / win10）
-  - **Linux**（CentOS / Ubuntu / Redhat）
-- 云服务
-  - 阿里云
-  - 腾讯云
-  - ...
-- Web 服务器软件
-- 项目源代码
-- 域名（不是必须）
-
-### 服务器购买及配置
-
-- [阿里云](https://www.aliyun.com/)
-- 云服务器 ECS
-- 乞丐版
-- 操作系统选择：Linux
-  - CentOS、**Ubuntu**、Fedora、....
-- 在购买好的主机的后台管理系统中，会告诉你这个机器的
-  - ip地址
-  - 连接端口号
-  - 默认是 root 用户
-  - 密码由你自己设定
-
-- 备案
-  - 香港节点不用备案
-
-### 连接到远程服务器
-
-SSH主要用于远程登录。假定你要以用户名user，登录远程主机host，只要一条简单命令就可以了。
-
-```bash
-ssh user@host
+```javascript
+var content = document.getElementById('content');
+var el = content.querySelector('p');
 ```
 
-如果本地用户名与远程用户名一致，登录时可以省略用户名。
+上面代码返回`content`节点的第一个`p`元素。
 
-```bash
-ssh host
+`Element.querySelector`方法可以接受任何复杂的 CSS 选择器。
+
+```javascript
+document.body.querySelector("style[type='text/css'], style:not([type])");
 ```
 
-SSH的默认端口是22，也就是说，你的登录请求会送进远程主机的22端口。使用p参数，可以修改这个端口。
+注意，这个方法无法选中伪元素。
 
-```bash
-ssh -p 2222 user@host
+它可以接受多个选择器，它们之间使用逗号分隔。
+
+```javascript
+element.querySelector('div, p')
 ```
 
-上面这条命令表示，ssh直接连接远程主机的2222端口。
+上面代码返回`element`的第一个`div`或`p`子元素。
 
+需要注意的是，浏览器执行`querySelector`方法时，是先在全局范围内搜索给定的 CSS 选择器，然后过滤出哪些属于当前元素的子元素。因此，会有一些违反直觉的结果，下面是一段 HTML 代码。
 
+```html
+<div>
+<blockquote id="outer">
+  <p>Hello</p>
+  <div id="inner">
+    <p>World</p>
+  </div>
+</blockquote>
+</div>
+```
 
-### 安装及配置 Web 服务器软件
+那么，像下面这样查询的话，实际上返回的是第一个`p`元素，而不是第二个。
 
-让服务运行在后台，注意，
+```javascript
+var outer = document.getElementById('outer');
+outer.querySelector('div p')
+// <p>Hello</p>
+```
 
-- forever
-- pm2
+### Element.querySelectorAll()
 
-### 上传网站到服务器
+`Element.querySelectorAll`方法接受 CSS 选择器作为参数，返回一个`NodeList`实例，包含所有匹配的子元素。
 
-- 把代码传到 github 或者 码云之类的云仓库
-- 服务端使用 git  去下载和更新你的源代码
+```javascript
+var el = document.querySelector('#test');
+var matches = el.querySelectorAll('div.highlighted > p');
+```
 
-### 域名购买及解析
+该方法的执行机制与`querySelector`方法相同，也是先在全局范围内查找，再过滤出当前元素的子元素。因此，选择器实际上针对整个文档的。
 
-ip地址
+它也可以接受多个 CSS 选择器，它们之间使用逗号分隔。如果选择器里面有伪元素的选择器，则总是返回一个空的`NodeList`实例。
 
-- 买域名
+### Element.getElementsByClassName()
 
-- 配置域名指向你的服务器 ip 地址
+`Element.getElementsByClassName`方法返回一个`HTMLCollection`实例，成员是当前元素节点的所有具有指定 class 的子元素节点。该方法与`document.getElementsByClassName`方法的用法类似，只是搜索范围不是整个文档，而是当前元素节点。
 
-  
+```javascript
+element.getElementsByClassName('red test');
+```
 
-### 总结
+注意，该方法的参数大小写敏感。
 
-- 多个网站服务
-- 一个网站服务对应一个域名
-- 80 端口号只能被占用一次
-- 如果想要在一台计算机上提供多个网站服务，如何都使用 80 端口号
-- 配置反向代理服务器
-- 三个网站
-  - www.a.com  192.168.1.125:80
-  - www.b.com  192.168.1.125:80
-  - www.c.com  192.168.1.125:80
-- nginx
-  - 监听 80
-  - www.a.com 127.0.0.1:3000
-  - www.b.com  127.0.0.1:4000
-  - www.c.com  127.0.0.1:5000
+由于`HTMLCollection`实例是一个活的集合，`document`对象的任何变化会立刻反应到实例，下面的代码不会生效。
 
+```javascript
+// HTML 代码如下
+// <div id="example">
+//   <p class="foo"></p>
+//   <p class="foo"></p>
+// </div>
+var element = document.getElementById('example');
+var matches = element.getElementsByClassName('foo');
+
+for (var i = 0; i< matches.length; i++) {
+  matches[i].classList.remove('foo');
+  matches.item(i).classList.add('bar');
+}
+// 执行后，HTML 代码如下
+// <div id="example">
+//   <p></p>
+//   <p class="foo bar"></p>
+// </div>
+```
+
+上面代码中，`matches`集合的第一个成员，一旦被拿掉 class 里面的`foo`，就会立刻从`matches`里面消失，导致出现上面的结果。
+
+### Element.getElementsByTagName()
+
+`Element.getElementsByTagName`方法返回一个`HTMLCollection`实例，成员是当前节点的所有匹配指定标签名的子元素节点。该方法与`document.getElementsByClassName`方法的用法类似，只是搜索范围不是整个文档，而是当前元素节点。
+
+```javascript
+var table = document.getElementById('forecast-table');
+var cells = table.getElementsByTagName('td');
+```
+
+注意，该方法的参数是大小写不敏感的。
+
+### Element.closest()
+
+`Element.closest`方法接受一个 CSS 选择器作为参数，返回匹配该选择器的、最接近当前节点的一个祖先节点（包括当前节点本身）。如果没有任何节点匹配 CSS 选择器，则返回`null`。
+
+```javascript
+// HTML 代码如下
+// <article>
+//   <div id="div-01">Here is div-01
+//     <div id="div-02">Here is div-02
+//       <div id="div-03">Here is div-03</div>
+//     </div>
+//   </div>
+// </article>
+
+var div03 = document.getElementById('div-03');
+
+// div-03 最近的祖先节点
+div03.closest("#div-02") // div-02
+div03.closest("div div") // div-03
+div03.closest("article > div") //div-01
+div03.closest(":not(div)") // article
+```
+
+上面代码中，由于`closest`方法将当前节点也考虑在内，所以第二个`closest`方法返回`div-03`。
+
+### Element.matches()
+
+`Element.matches`方法返回一个布尔值，表示当前元素是否匹配给定的 CSS 选择器。
+
+```javascript
+if (el.matches('.someClass')) {
+  console.log('Match!');
+}
+```
+
+### 事件相关方法
+
+以下三个方法与`Element`节点的事件相关。这些方法都继承自`EventTarget`接口，详见相关章节。
+
+- `Element.addEventListener()`：添加事件的回调函数
+- `Element.removeEventListener()`：移除事件监听函数
+- `Element.dispatchEvent()`：触发事件
+
+```javascript
+element.addEventListener('click', listener, false);
+element.removeEventListener('click', listener, false);
+
+var event = new Event('click');
+element.dispatchEvent(event);
+```
+
+### Element.scrollIntoView()
+
+`Element.scrollIntoView`方法滚动当前元素，进入浏览器的可见区域，类似于设置`window.location.hash`的效果。
+
+```javascript
+el.scrollIntoView(); // 等同于el.scrollIntoView(true)
+el.scrollIntoView(false);
+```
+
+该方法可以接受一个布尔值作为参数。如果为`true`，表示元素的顶部与当前区域的可见部分的顶部对齐（前提是当前区域可滚动）；如果为`false`，表示元素的底部与当前区域的可见部分的尾部对齐（前提是当前区域可滚动）。如果没有提供该参数，默认为`true`。
+
+### Element.getBoundingClientRect()
+
+`Element.getBoundingClientRect`方法返回一个对象，提供当前元素节点的大小、位置等信息，基本上就是 CSS 盒状模型的所有信息。
+
+```javascript
+var rect = obj.getBoundingClientRect();
+```
+
+上面代码中，`getBoundingClientRect`方法返回的`rect`对象，具有以下属性（全部为只读）。
+
+- `x`：元素左上角相对于视口的横坐标
+- `y`：元素左上角相对于视口的纵坐标
+- `height`：元素高度
+- `width`：元素宽度
+- `left`：元素左上角相对于视口的横坐标，与`x`属性相等
+- `right`：元素右边界相对于视口的横坐标（等于`x + width`）
+- `top`：元素顶部相对于视口的纵坐标，与`y`属性相等
+- `bottom`：元素底部相对于视口的纵坐标（等于`y + height`）
+
+由于元素相对于视口（viewport）的位置，会随着页面滚动变化，因此表示位置的四个属性值，都不是固定不变的。如果想得到绝对位置，可以将`left`属性加上`window.scrollX`，`top`属性加上`window.scrollY`。
+
+注意，`getBoundingClientRect`方法的所有属性，都把边框（`border`属性）算作元素的一部分。也就是说，都是从边框外缘的各个点来计算。因此，`width`和`height`包括了元素本身 + `padding` + `border`。
+
+另外，上面的这些属性，都是继承自原型的属性，`Object.keys`会返回一个空数组，这一点也需要注意。
+
+```javascript
+var rect = document.body.getBoundingClientRect();
+Object.keys(rect) // []
+```
+
+上面代码中，`rect`对象没有自身属性，而`Object.keys`方法只返回对象自身的属性，所以返回了一个空数组。
+
+### Element.getClientRects()
+
+`Element.getClientRects`方法返回一个类似数组的对象，里面是当前元素在页面上形成的所有矩形（所以方法名中的`Rect`用的是复数）。每个矩形都有`bottom`、`height`、`left`、`right`、`top`和`width`六个属性，表示它们相对于视口的四个坐标，以及本身的高度和宽度。
+
+对于盒状元素（比如`<div>`和`<p>`），该方法返回的对象中只有该元素一个成员。对于行内元素（比如`<span>`、`<a>`、`<em>`），该方法返回的对象有多少个成员，取决于该元素在页面上占据多少行。这是它和`Element.getBoundingClientRect()`方法的主要区别，后者对于行内元素总是返回一个矩形。
+
+```html
+<span id="inline">Hello World Hello World Hello World</span>
+```
+
+上面代码是一个行内元素`<span>`，如果它在页面上占据三行，`getClientRects`方法返回的对象就有三个成员，如果它在页面上占据一行，`getClientRects`方法返回的对象就只有一个成员。
+
+```javascript
+var el = document.getElementById('inline');
+el.getClientRects().length // 3
+el.getClientRects()[0].left // 8
+el.getClientRects()[0].right // 113.908203125
+el.getClientRects()[0].bottom // 31.200000762939453
+el.getClientRects()[0].height // 23.200000762939453
+el.getClientRects()[0].width // 105.908203125
+```
+
+这个方法主要用于判断行内元素是否换行，以及行内元素的每一行的位置偏移。
+
+注意，如果行内元素包括换行符，那么该方法会把换行符考虑在内。
+
+```html
+<span id="inline">
+  Hello World
+  Hello World
+  Hello World
+</span>
+```
+
+上面代码中，`<span>`节点内部有三个换行符，即使 HTML 语言忽略换行符，将它们显示为一行，`getClientRects()`方法依然会返回三个成员。如果行宽设置得特别窄，上面的`<span>`元素显示为6行，那么就会返回六个成员。
+
+### Element.insertAdjacentElement()
+
+`Element.insertAdjacentElement`方法在相对于当前元素的指定位置，插入一个新的节点。该方法返回被插入的节点，如果插入失败，返回`null`。
+
+```javascript
+element.insertAdjacentElement(position, element);
+```
+
+`Element.insertAdjacentElement`方法一共可以接受两个参数，第一个参数是一个字符串，表示插入的位置，第二个参数是将要插入的节点。第一个参数只可以取如下的值。
+
+- `beforebegin`：当前元素之前
+- `afterbegin`：当前元素内部的第一个子节点前面
+- `beforeend`：当前元素内部的最后一个子节点后面
+- `afterend`：当前元素之后
+
+注意，`beforebegin`和`afterend`这两个值，只在当前节点有父节点时才会生效。如果当前节点是由脚本创建的，没有父节点，那么插入会失败。
+
+```javascript
+var p1 = document.createElement('p')
+var p2 = document.createElement('p')
+p1.insertAdjacentElement('afterend', p2) // null
+```
+
+上面代码中，`p1`没有父节点，所以插入`p2`到它后面就失败了。
+
+如果插入的节点是一个文档里现有的节点，它会从原有位置删除，放置到新的位置。
+
+### Element.insertAdjacentHTML()，Element.insertAdjacentText()
+
+`Element.insertAdjacentHTML`方法用于将一个 HTML 字符串，解析生成 DOM 结构，插入相对于当前节点的指定位置。
+
+```javascript
+element.insertAdjacentHTML(position, text);
+```
+
+该方法接受两个参数，第一个是一个表示指定位置的字符串，第二个是待解析的 HTML 字符串。第一个参数只能设置下面四个值之一。
+
+- `beforebegin`：当前元素之前
+- `afterbegin`：当前元素内部的第一个子节点前面
+- `beforeend`：当前元素内部的最后一个子节点后面
+- `afterend`：当前元素之后
+
+```javascript
+// HTML 代码：<div id="one">one</div>
+var d1 = document.getElementById('one');
+d1.insertAdjacentHTML('afterend', '<div id="two">two</div>');
+// 执行后的 HTML 代码：
+// <div id="one">one</div><div id="two">two</div>
+```
+
+该方法只是在现有的 DOM 结构里面插入节点，这使得它的执行速度比`innerHTML`方法快得多。
+
+注意，该方法不会转义 HTML 字符串，这导致它不能用来插入用户输入的内容，否则会有安全风险。
+
+`Element.insertAdjacentText`方法在相对于当前节点的指定位置，插入一个文本节点，用法与`Element.insertAdjacentHTML`方法完全一致。
+
+```javascript
+// HTML 代码：<div id="one">one</div>
+var d1 = document.getElementById('one');
+d1.insertAdjacentText('afterend', 'two');
+// 执行后的 HTML 代码：
+// <div id="one">one</div>two
+```
+
+### Element.remove()
+
+`Element.remove`方法继承自 ChildNode 接口，用于将当前元素节点从它的父节点移除。
+
+```javascript
+var el = document.getElementById('mydiv');
+el.remove();
+```
+
+上面代码将`el`节点从 DOM 树里面移除。
+
+### Element.focus()，Element.blur()
+
+`Element.focus`方法用于将当前页面的焦点，转移到指定元素上。
+
+```javascript
+document.getElementById('my-span').focus();
+```
+
+该方法可以接受一个对象作为参数。参数对象的`preventScroll`属性是一个布尔值，指定是否将当前元素停留在原始位置，而不是滚动到可见区域。
+
+```javascript
+function getFocus() {
+  document.getElementById('btn').focus({preventScroll:false});
+}
+```
+
+上面代码会让`btn`元素获得焦点，并滚动到可见区域。
+
+最后，从`document.activeElement`属性可以得到当前获得焦点的元素。
+
+`Element.blur`方法用于将焦点从当前元素移除。
+
+### Element.click()
+
+`Element.click`方法用于在当前元素上模拟一次鼠标点击，相当于触发了`click`事件。
+
+## 参考链接
+
+- Craig Buckler，[How to Translate from DOM to SVG Coordinates and Back Again](https://www.sitepoint.com/how-to-translate-from-dom-to-svg-coordinates-and-back-again/)
