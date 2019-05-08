@@ -8,7 +8,7 @@
 
 [通过一系列刺激的关卡挑战，逐步深入的学习 Git 的强大功能 ](https://learngitbranching.js.org/ )
 
-![bg2015120901](../../../web/blog-http/blog/assets/bg2015120901.png)
+![bg2015120901](./assets/bg2015120901.png)
 
 下面是我整理的常用 Git 命令清单。几个专用名词的译名如下。
 
