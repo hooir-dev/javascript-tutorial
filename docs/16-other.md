@@ -87,3 +87,12 @@ for (let i = 0; i < arr.length; i++) {
     }
 }
 ```
+
+### 封装检验数据类型
+
+```javascript
+  const isType = type => target => `[object ${type}]` === 		 	Object.prototype.toString.call(target)
+  const isArray = isType('Array')
+  console.log(isArray(''))
+```
+
