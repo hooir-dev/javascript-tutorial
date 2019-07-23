@@ -1,11 +1,5 @@
 # Javascript 的 this 用法
 
-作者： [刘洋](https://www.thisliuyang.cn/)
-
-日期： [2016年4月30日](https://www.thisliuyang.cn/)
-
-
-
 `this`是 JavaScript 语言的一个关键字。
 
 它是函数运行时，在函数体内部自动生成的一个对象，只能在函数体内部使用。
