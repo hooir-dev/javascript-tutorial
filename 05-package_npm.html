@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>浏览器同源政策及其规避方法 | javascript 学习总结</title>
+    <meta name="description" content="持续更新中...">
+    
+    
+    <link rel="preload" href="/assets/css/0.styles.bc72b5c6.css" as="style"><link rel="preload" href="/assets/js/app.fa27fcb7.js" as="script"><link rel="preload" href="/assets/js/9.396e3ff8.js" as="script"><link rel="prefetch" href="/assets/js/10.50f8cc69.js"><link rel="prefetch" href="/assets/js/11.63165319.js"><link rel="prefetch" href="/assets/js/12.c77fd109.js"><link rel="prefetch" href="/assets/js/13.d3bcb504.js"><link rel="prefetch" href="/assets/js/14.2ab5316d.js"><link rel="prefetch" href="/assets/js/15.50e05516.js"><link rel="prefetch" href="/assets/js/16.cc4e9e6b.js"><link rel="prefetch" href="/assets/js/17.cf8a5144.js"><link rel="prefetch" href="/assets/js/18.995ea2c3.js"><link rel="prefetch" href="/assets/js/19.b53dbd1f.js"><link rel="prefetch" href="/assets/js/2.24befd02.js"><link rel="prefetch" href="/assets/js/20.4f10ac6f.js"><link rel="prefetch" href="/assets/js/21.a93f4746.js"><link rel="prefetch" href="/assets/js/3.c69e2e19.js"><link rel="prefetch" href="/assets/js/4.da806239.js"><link rel="prefetch" href="/assets/js/5.953b51b4.js"><link rel="prefetch" href="/assets/js/6.f74ce3b5.js"><link rel="prefetch" href="/assets/js/7.ebbd53f9.js"><link rel="prefetch" href="/assets/js/8.5ea0397d.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.bc72b5c6.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-active"><!----> <span class="site-name">javascript 学习总结</span></a> <div class="links" style="max-width:nullpx;"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="http://liuyang.feblog.cn" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  刘洋博客
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">学习文档</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="http://vuejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  vue
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><!----> <a href="http://nodejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  nodejs
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li></ul></div></div> <a href="https://github.com/thisliuyang/javascript-tutorial" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></nav></div></header> <div class="sidebar-mask"></div> <div class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="http://liuyang.feblog.cn" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  刘洋博客
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">学习文档</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="http://vuejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  vue
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><!----> <a href="http://nodejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  nodejs
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li></ul></div></div> <a href="https://github.com/thisliuyang/javascript-tutorial" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></nav>  <ul class="sidebar-links"><li><a href="/00-javascript.html" class="sidebar-link">Javascript基础</a></li><li><a href="/01-web_concept.html" class="sidebar-link">Javascript 的 this 用法</a></li><li><a href="/02-node_introduction.html" class="sidebar-link">JS 中可以提升幸福度的小技巧</a></li><li><a href="/03-getting_started.html" class="sidebar-link">Vue.js双向绑定的实现原理</a></li><li><a href="/04-module.html" class="sidebar-link">常用 Git 命令清单</a></li><li><a href="/05-package_npm.html" class="active sidebar-link">浏览器同源政策及其规避方法</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/05-package_npm.html#一、概述" class="sidebar-link">一、概述</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/05-package_npm.html#_1-1-含义" class="sidebar-link">1.1 含义</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#_1-2-目的" class="sidebar-link">1.2 目的</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#_1-3-限制范围" class="sidebar-link">1.3 限制范围</a></li></ul></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#二、cookie" class="sidebar-link">二、Cookie</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#三、iframe" class="sidebar-link">三、iframe</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/05-package_npm.html#_3-1-片段识别符" class="sidebar-link">3.1 片段识别符</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#_3-2-window-name" class="sidebar-link">3.2 window.name</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#_3-3-window-postmessage" class="sidebar-link">3.3 window.postMessage</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#_3-4-localstorage" class="sidebar-link">3.4 LocalStorage</a></li></ul></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#四、ajax" class="sidebar-link">四、AJAX</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/05-package_npm.html#_4-1-jsonp" class="sidebar-link">4.1 JSONP</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#_4-2-websocket" class="sidebar-link">4.2 WebSocket</a></li><li class="sidebar-sub-header"><a href="/05-package_npm.html#_4-3-cors" class="sidebar-link">4.3 CORS</a></li></ul></li></ul></li><li><a href="/06-fs.html" class="sidebar-link">深入理解函数作用域之形参作用域</a></li><li><a href="/07-web.html" class="sidebar-link">数组的几个不 low 操作</a></li><li><a href="/08-express.html" class="sidebar-link">选择排序、桶排序、冒泡排序和快速排序</a></li><li><a href="/09-db.html" class="sidebar-link">window 对象</a></li><li><a href="/10-web_db.html" class="sidebar-link">XMLHttpRequest 对象</a></li><li><a href="/11-session_persistence.html" class="sidebar-link">Promise 对象</a></li><li><a href="/12-ajax.html" class="sidebar-link">Document 节点</a></li><li><a href="/13-alibaixiu.html" class="sidebar-link">Element 节点</a></li><li><a href="/14-asynchronous_ programming.html" class="sidebar-link">异步操作概述</a></li><li><a href="/15-dep_ops.html" class="sidebar-link">鼠标事件</a></li><li><a href="/16-other.html" class="sidebar-link">js常用函数</a></li></ul> </div> <div class="page"> <div class="content"><h1 id="浏览器同源政策及其规避方法"><a href="#浏览器同源政策及其规避方法" aria-hidden="true" class="header-anchor">#</a> 浏览器同源政策及其规避方法</h1> <h2 id="一、概述"><a href="#一、概述" aria-hidden="true" class="header-anchor">#</a> 一、概述</h2> <h3 id="_1-1-含义"><a href="#_1-1-含义" aria-hidden="true" class="header-anchor">#</a> 1.1 含义</h3> <p>1995年，同源政策由 Netscape 公司引入浏览器。目前，所有浏览器都实行这个政策。</p> <p>最初，它的含义是指，A网页设置的 Cookie，B网页不能打开，除非这两个网页&quot;同源&quot;。所谓&quot;同源&quot;指的是&quot;三个相同&quot;。</p> <blockquote><ul><li>协议相同</li> <li>域名相同</li> <li>端口相同</li></ul></blockquote> <p>举例来说，<code>http://www.example.com/dir/page.html</code>这个网址，协议是<code>http://</code>，域名是<code>www.example.com</code>，端口是<code>80</code>（默认端口可以省略）。它的同源情况如下。</p> <blockquote><ul><li><code>http://www.example.com/dir2/other.html</code>：同源</li> <li><code>http://example.com/dir/other.html</code>：不同源（域名不同）</li> <li><code>http://v2.www.example.com/dir/other.html</code>：不同源（域名不同）</li> <li><code>http://www.example.com:81/dir/other.html</code>：不同源（端口不同）</li></ul></blockquote> <h3 id="_1-2-目的"><a href="#_1-2-目的" aria-hidden="true" class="header-anchor">#</a> 1.2 目的</h3> <p>同源政策的目的，是为了保证用户信息的安全，防止恶意的网站窃取数据。</p> <p>设想这样一种情况：A网站是一家银行，用户登录以后，又去浏览其他网站。如果其他网站可以读取A网站的 Cookie，会发生什么？</p> <p>很显然，如果 Cookie 包含隐私（比如存款总额），这些信息就会泄漏。更可怕的是，Cookie 往往用来保存用户的登录状态，如果用户没有退出登录，其他网站就可以冒充用户，为所欲为。因为浏览器同时还规定，提交表单不受同源政策的限制。</p> <p>由此可见，&quot;同源政策&quot;是必需的，否则 Cookie 可以共享，互联网就毫无安全可言了。</p> <h3 id="_1-3-限制范围"><a href="#_1-3-限制范围" aria-hidden="true" class="header-anchor">#</a> 1.3 限制范围</h3> <p>随着互联网的发展，&quot;同源政策&quot;越来越严格。目前，如果非同源，共有三种行为受到限制。</p> <blockquote><p>（1） Cookie、LocalStorage 和 IndexDB 无法读取。</p> <p>（2） DOM 无法获得。</p> <p>（3） AJAX 请求不能发送。</p></blockquote> <p>虽然这些限制是必要的，但是有时很不方便，合理的用途也受到影响。下面，我将详细介绍，如何规避上面三种限制。</p> <h2 id="二、cookie"><a href="#二、cookie" aria-hidden="true" class="header-anchor">#</a> 二、Cookie</h2> <p>Cookie 是服务器写入浏览器的一小段信息，只有同源的网页才能共享。但是，两个网页一级域名相同，只是二级域名不同，浏览器允许通过设置<code>document.domain</code>共享 Cookie。</p> <p>举例来说，A网页是<code>http://w1.example.com/a.html</code>，B网页是<code>http://w2.example.com/b.html</code>，那么只要设置相同的<code>document.domain</code>，两个网页就可以共享Cookie。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>document.domain = 'example.com';
+</code></pre></div></blockquote> <p>现在，A网页通过脚本设置一个 Cookie。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>document.cookie = &quot;test1=hello&quot;;
+</code></pre></div></blockquote> <p>B网页就可以读到这个 Cookie。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>var allCookie = document.cookie;
+</code></pre></div></blockquote> <p>注意，这种方法只适用于 Cookie 和 iframe 窗口，LocalStorage 和 IndexDB 无法通过这种方法，规避同源政策，而要使用下文介绍的PostMessage API。</p> <p>另外，服务器也可以在设置Cookie的时候，指定Cookie的所属域名为一级域名，比如<code>.example.com</code>。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>Set-Cookie: key=value; domain=.example.com; path=/
+</code></pre></div></blockquote> <p>这样的话，二级域名和三级域名不用做任何设置，都可以读取这个Cookie。</p> <h2 id="三、iframe"><a href="#三、iframe" aria-hidden="true" class="header-anchor">#</a> 三、iframe</h2> <p>如果两个网页不同源，就无法拿到对方的DOM。典型的例子是<code>iframe</code>窗口和<code>window.open</code>方法打开的窗口，它们与父窗口无法通信。</p> <p>比如，父窗口运行下面的命令，如果<code>iframe</code>窗口不是同源，就会报错。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>document.getElementById(&quot;myIFrame&quot;).contentWindow.document
+// Uncaught DOMException: Blocked a frame from accessing a cross-origin frame.
+</code></pre></div></blockquote> <p>上面命令中，父窗口想获取子窗口的DOM，因为跨源导致报错。</p> <p>反之亦然，子窗口获取主窗口的DOM也会报错。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.parent.document.body
+// 报错
+</code></pre></div></blockquote> <p>如果两个窗口一级域名相同，只是二级域名不同，那么设置上一节介绍的<code>document.domain</code>属性，就可以规避同源政策，拿到DOM。</p> <p>对于完全不同源的网站，目前有三种方法，可以解决跨域窗口的通信问题。</p> <blockquote><ul><li>片段识别符（fragment identifier）</li> <li>window.name</li> <li>跨文档通信API（Cross-document messaging）</li></ul></blockquote> <h3 id="_3-1-片段识别符"><a href="#_3-1-片段识别符" aria-hidden="true" class="header-anchor">#</a> 3.1 片段识别符</h3> <p>片段标识符（fragment identifier）指的是，URL的<code>#</code>号后面的部分，比如<code>http://example.com/x.html#fragment</code>的<code>#fragment</code>。如果只是改变片段标识符，页面不会重新刷新。</p> <p>父窗口可以把信息，写入子窗口的片段标识符。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>var src = originURL + '#' + data;
+document.getElementById('myIFrame').src = src;
+</code></pre></div></blockquote> <p>子窗口通过监听<code>hashchange</code>事件得到通知。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.onhashchange = checkMessage;
+
+function checkMessage() {
+  var message = window.location.hash;
+  // ...
+}
+</code></pre></div></blockquote> <p>同样的，子窗口也可以改变父窗口的片段标识符。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>parent.location.href= target + &quot;#&quot; + hash;
+</code></pre></div></blockquote> <h3 id="_3-2-window-name"><a href="#_3-2-window-name" aria-hidden="true" class="header-anchor">#</a> 3.2 window.name</h3> <p>浏览器窗口有<code>window.name</code>属性。这个属性的最大特点是，无论是否同源，只要在同一个窗口里，前一个网页设置了这个属性，后一个网页可以读取它。</p> <p>父窗口先打开一个子窗口，载入一个不同源的网页，该网页将信息写入<code>window.name</code>属性。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.name = data;
+</code></pre></div></blockquote> <p>接着，子窗口跳回一个与主窗口同域的网址。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>location = 'http://parent.url.com/xxx.html';
+</code></pre></div></blockquote> <p>然后，主窗口就可以读取子窗口的<code>window.name</code>了。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>var data = document.getElementById('myFrame').contentWindow.name;
+</code></pre></div></blockquote> <p>这种方法的优点是，<code>window.name</code>容量很大，可以放置非常长的字符串；缺点是必须监听子窗口<code>window.name</code>属性的变化，影响网页性能。</p> <h3 id="_3-3-window-postmessage"><a href="#_3-3-window-postmessage" aria-hidden="true" class="header-anchor">#</a> 3.3 window.postMessage</h3> <p>上面两种方法都属于破解，HTML5为了解决这个问题，引入了一个全新的API：跨文档通信 API（Cross-document messaging）。</p> <p>这个API为<code>window</code>对象新增了一个<code>window.postMessage</code>方法，允许跨窗口通信，不论这两个窗口是否同源。</p> <p>举例来说，父窗口<code>http://aaa.com</code>向子窗口<code>http://bbb.com</code>发消息，调用<code>postMessage</code>方法就可以了。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>var popup = window.open('http://bbb.com', 'title');
+popup.postMessage('Hello World!', 'http://bbb.com');
+</code></pre></div></blockquote> <p><code>postMessage</code>方法的第一个参数是具体的信息内容，第二个参数是接收消息的窗口的源（origin），即&quot;协议 + 域名 + 端口&quot;。也可以设为<code>*</code>，表示不限制域名，向所有窗口发送。</p> <p>子窗口向父窗口发送消息的写法类似。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.opener.postMessage('Nice to see you', 'http://aaa.com');
+</code></pre></div></blockquote> <p>父窗口和子窗口都可以通过<code>message</code>事件，监听对方的消息。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.addEventListener('message', function(e) {
+  console.log(e.data);
+},false);
+</code></pre></div></blockquote> <p><code>message</code>事件的事件对象<code>event</code>，提供以下三个属性。</p> <blockquote><ul><li><code>event.source</code>：发送消息的窗口</li> <li><code>event.origin</code>: 消息发向的网址</li> <li><code>event.data</code>: 消息内容</li></ul></blockquote> <p>下面的例子是，子窗口通过<code>event.source</code>属性引用父窗口，然后发送消息。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.addEventListener('message', receiveMessage);
+function receiveMessage(event) {
+  event.source.postMessage('Nice to see you!', '*');
+}
+</code></pre></div></blockquote> <p><code>event.origin</code>属性可以过滤不是发给本窗口的消息。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.addEventListener('message', receiveMessage);
+function receiveMessage(event) {
+  if (event.origin !== 'http://aaa.com') return;
+  if (event.data === 'Hello World') {
+      event.source.postMessage('Hello', event.origin);
+  } else {
+    console.log(event.data);
+  }
+}
+</code></pre></div></blockquote> <h3 id="_3-4-localstorage"><a href="#_3-4-localstorage" aria-hidden="true" class="header-anchor">#</a> 3.4 LocalStorage</h3> <p>通过<code>window.postMessage</code>，读写其他窗口的 LocalStorage 也成为了可能。</p> <p>下面是一个例子，主窗口写入iframe子窗口的<code>localStorage</code>。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.onmessage = function(e) {
+  if (e.origin !== 'http://bbb.com') {
+    return;
+  }
+  var payload = JSON.parse(e.data);
+  localStorage.setItem(payload.key, JSON.stringify(payload.data));
+};
+</code></pre></div></blockquote> <p>上面代码中，子窗口将父窗口发来的消息，写入自己的LocalStorage。</p> <p>父窗口发送消息的代码如下。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>var win = document.getElementsByTagName('iframe')[0].contentWindow;
+var obj = { name: 'Jack' };
+win.postMessage(JSON.stringify({key: 'storage', data: obj}), 'http://bbb.com');
+</code></pre></div></blockquote> <p>加强版的子窗口接收消息的代码如下。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>window.onmessage = function(e) {
+  if (e.origin !== 'http://bbb.com') return;
+  var payload = JSON.parse(e.data);
+  switch (payload.method) {
+    case 'set':
+      localStorage.setItem(payload.key, JSON.stringify(payload.data));
+      break;
+    case 'get':
+      var parent = window.parent;
+      var data = localStorage.getItem(payload.key);
+      parent.postMessage(data, 'http://aaa.com');
+      break;
+    case 'remove':
+      localStorage.removeItem(payload.key);
+      break;
+  }
+};
+</code></pre></div></blockquote> <p>加强版的父窗口发送消息代码如下。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>var win = document.getElementsByTagName('iframe')[0].contentWindow;
+var obj = { name: 'Jack' };
+// 存入对象
+win.postMessage(JSON.stringify({key: 'storage', method: 'set', data: obj}), 'http://bbb.com');
+// 读取对象
+win.postMessage(JSON.stringify({key: 'storage', method: &quot;get&quot;}), &quot;*&quot;);
+window.onmessage = function(e) {
+  if (e.origin != 'http://aaa.com') return;
+  // &quot;Jack&quot;
+  console.log(JSON.parse(e.data).name);
+};
+</code></pre></div></blockquote> <h2 id="四、ajax"><a href="#四、ajax" aria-hidden="true" class="header-anchor">#</a> 四、AJAX</h2> <p>同源政策规定，AJAX请求只能发给同源的网址，否则就报错。</p> <p>除了架设服务器代理（浏览器请求同源服务器，再由后者请求外部服务），有三种方法规避这个限制。</p> <blockquote><ul><li>JSONP</li> <li>WebSocket</li> <li>CORS</li></ul></blockquote> <h3 id="_4-1-jsonp"><a href="#_4-1-jsonp" aria-hidden="true" class="header-anchor">#</a> 4.1 JSONP</h3> <p>JSONP是服务器与客户端跨源通信的常用方法。最大特点就是简单适用，老式浏览器全部支持，服务器改造非常小。</p> <p>它的基本思想是，网页通过添加一个<code>&lt;script&gt;</code>元素，向服务器请求JSON数据，这种做法不受同源政策限制；服务器收到请求后，将数据放在一个指定名字的回调函数里传回来。</p> <p>首先，网页动态插入<code>&lt;script&gt;</code>元素，由它向跨源网址发出请求。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>function addScriptTag(src) {
+  var script = document.createElement('script');
+  script.setAttribute(&quot;type&quot;,&quot;text/javascript&quot;);
+  script.src = src;
+  document.body.appendChild(script);
+}
+
+window.onload = function () {
+  addScriptTag('http://example.com/ip?callback=foo');
+}
+
+function foo(data) {
+  console.log('Your public IP address is: ' + data.ip);
+};
+</code></pre></div></blockquote> <p>上面代码通过动态添加<code>&lt;script&gt;</code>元素，向服务器<code>example.com</code>发出请求。注意，该请求的查询字符串有一个<code>callback</code>参数，用来指定回调函数的名字，这对于JSONP是必需的。</p> <p>服务器收到这个请求以后，会将数据放在回调函数的参数位置返回。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>foo({
+  &quot;ip&quot;: &quot;8.8.8.8&quot;
+});
+</code></pre></div></blockquote> <p>由于<code>&lt;script&gt;</code>元素请求的脚本，直接作为代码运行。这时，只要浏览器定义了<code>foo</code>函数，该函数就会立即调用。作为参数的JSON数据被视为JavaScript对象，而不是字符串，因此避免了使用<code>JSON.parse</code>的步骤。</p> <h3 id="_4-2-websocket"><a href="#_4-2-websocket" aria-hidden="true" class="header-anchor">#</a> 4.2 WebSocket</h3> <p>WebSocket是一种通信协议，使用<code>ws://</code>（非加密）和<code>wss://</code>（加密）作为协议前缀。该协议不实行同源政策，只要服务器支持，就可以通过它进行跨源通信。</p> <p>下面是一个例子，浏览器发出的WebSocket请求的头信息（摘自<a href="https://en.wikipedia.org/wiki/WebSocket" target="_blank" rel="noopener noreferrer">维基百科<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a>）。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>GET /chat HTTP/1.1
+Host: server.example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
+Sec-WebSocket-Protocol: chat, superchat
+Sec-WebSocket-Version: 13
+Origin: http://example.com
+</code></pre></div></blockquote> <p>上面代码中，有一个字段是<code>Origin</code>，表示该请求的请求源（origin），即发自哪个域名。</p> <p>正是因为有了<code>Origin</code>这个字段，所以WebSocket才没有实行同源政策。因为服务器可以根据这个字段，判断是否许可本次通信。如果该域名在白名单内，服务器就会做出如下回应。</p> <blockquote><div class="language- extra-class"><pre class="language-text"><code>HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
+Sec-WebSocket-Protocol: chat
+</code></pre></div></blockquote> <h3 id="_4-3-cors"><a href="#_4-3-cors" aria-hidden="true" class="header-anchor">#</a> 4.3 CORS</h3> <p>CORS是跨源资源分享（Cross-Origin Resource Sharing）的缩写。它是W3C标准，是跨源AJAX请求的根本解决方法。相比JSONP只能发<code>GET</code>请求，CORS允许任何类型的请求。</p> <p>（完）</p></div> <div class="page-edit"><div class="edit-link"><a href="https://github.com/thisliuyang/javascript-tutorial/edit/master/docs/05-package_npm.md" target="_blank" rel="noopener noreferrer">在 GitHub 上编辑此页</a> <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></div> <div class="last-updated"><span class="prefix">上次更新: </span> <span class="time">9/15/2019, 1:31:32 PM</span></div></div> <div class="page-nav"><p class="inner"><span class="prev">
+        ←
+        <a href="/04-module.html" class="prev">
+          常用 Git 命令清单
+        </a></span> <span class="next"><a href="/06-fs.html">
+          深入理解函数作用域之形参作用域
+        </a>
+        →
+      </span></p></div> </div> <!----></div></div>
+    <script src="/assets/js/app.fa27fcb7.js" defer></script><script src="/assets/js/9.396e3ff8.js" defer></script>
+  </body>
+</html>

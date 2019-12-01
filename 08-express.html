@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>选择排序、桶排序、冒泡排序和快速排序 | javascript 学习总结</title>
+    <meta name="description" content="持续更新中...">
+    
+    
+    <link rel="preload" href="/assets/css/0.styles.bc72b5c6.css" as="style"><link rel="preload" href="/assets/js/app.fa27fcb7.js" as="script"><link rel="preload" href="/assets/js/11.63165319.js" as="script"><link rel="prefetch" href="/assets/js/10.50f8cc69.js"><link rel="prefetch" href="/assets/js/12.c77fd109.js"><link rel="prefetch" href="/assets/js/13.d3bcb504.js"><link rel="prefetch" href="/assets/js/14.2ab5316d.js"><link rel="prefetch" href="/assets/js/15.50e05516.js"><link rel="prefetch" href="/assets/js/16.cc4e9e6b.js"><link rel="prefetch" href="/assets/js/17.cf8a5144.js"><link rel="prefetch" href="/assets/js/18.995ea2c3.js"><link rel="prefetch" href="/assets/js/19.b53dbd1f.js"><link rel="prefetch" href="/assets/js/2.24befd02.js"><link rel="prefetch" href="/assets/js/20.4f10ac6f.js"><link rel="prefetch" href="/assets/js/21.a93f4746.js"><link rel="prefetch" href="/assets/js/3.c69e2e19.js"><link rel="prefetch" href="/assets/js/4.da806239.js"><link rel="prefetch" href="/assets/js/5.953b51b4.js"><link rel="prefetch" href="/assets/js/6.f74ce3b5.js"><link rel="prefetch" href="/assets/js/7.ebbd53f9.js"><link rel="prefetch" href="/assets/js/8.5ea0397d.js"><link rel="prefetch" href="/assets/js/9.396e3ff8.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.bc72b5c6.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-active"><!----> <span class="site-name">javascript 学习总结</span></a> <div class="links" style="max-width:nullpx;"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="http://liuyang.feblog.cn" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  刘洋博客
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">学习文档</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="http://vuejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  vue
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><!----> <a href="http://nodejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  nodejs
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li></ul></div></div> <a href="https://github.com/thisliuyang/javascript-tutorial" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></nav></div></header> <div class="sidebar-mask"></div> <div class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="http://liuyang.feblog.cn" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  刘洋博客
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">学习文档</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="http://vuejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  vue
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><!----> <a href="http://nodejs.feblog.cn/" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  nodejs
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li></ul></div></div> <a href="https://github.com/thisliuyang/javascript-tutorial" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></nav>  <ul class="sidebar-links"><li><a href="/00-javascript.html" class="sidebar-link">Javascript基础</a></li><li><a href="/01-web_concept.html" class="sidebar-link">Javascript 的 this 用法</a></li><li><a href="/02-node_introduction.html" class="sidebar-link">JS 中可以提升幸福度的小技巧</a></li><li><a href="/03-getting_started.html" class="sidebar-link">Vue.js双向绑定的实现原理</a></li><li><a href="/04-module.html" class="sidebar-link">常用 Git 命令清单</a></li><li><a href="/05-package_npm.html" class="sidebar-link">浏览器同源政策及其规避方法</a></li><li><a href="/06-fs.html" class="sidebar-link">深入理解函数作用域之形参作用域</a></li><li><a href="/07-web.html" class="sidebar-link">数组的几个不 low 操作</a></li><li><a href="/08-express.html" class="active sidebar-link">选择排序、桶排序、冒泡排序和快速排序</a><ul class="sidebar-sub-headers"></ul></li><li><a href="/09-db.html" class="sidebar-link">window 对象</a></li><li><a href="/10-web_db.html" class="sidebar-link">XMLHttpRequest 对象</a></li><li><a href="/11-session_persistence.html" class="sidebar-link">Promise 对象</a></li><li><a href="/12-ajax.html" class="sidebar-link">Document 节点</a></li><li><a href="/13-alibaixiu.html" class="sidebar-link">Element 节点</a></li><li><a href="/14-asynchronous_ programming.html" class="sidebar-link">异步操作概述</a></li><li><a href="/15-dep_ops.html" class="sidebar-link">鼠标事件</a></li><li><a href="/16-other.html" class="sidebar-link">js常用函数</a></li></ul> </div> <div class="page"> <div class="content"><h1 id="选择排序、桶排序、冒泡排序和快速排序"><a href="#选择排序、桶排序、冒泡排序和快速排序" aria-hidden="true" class="header-anchor">#</a> 选择排序、桶排序、冒泡排序和快速排序</h1> <h3 id="选择排序"><a href="#选择排序" aria-hidden="true" class="header-anchor">#</a> 选择排序</h3> <h4 id="原理"><a href="#原理" aria-hidden="true" class="header-anchor">#</a> 原理</h4> <p>选择排序从数组内遍历出最大值，加入新数组，将最大值从原数组中删除，重复上述操作，最后得出的新数组就是一个从大到小排序的数组了。</p> <h4 id="代码实现"><a href="#代码实现" aria-hidden="true" class="header-anchor">#</a> 代码实现</h4> <div class="language- extra-class"><pre class="language-text"><code>/**
+ * params {number[]} list
+ * return {number[]}
+ */
+function sort(list) {
+  list = [...list]; // 最好不要对元素组操作
+  const newList = []; // 创建待返回的空数组
+  while(list.length) { // 当 list.length === 0 时，表示处理完毕
+    let min = Infinity; // 设最小值无穷大 或者 等于 list 中的任意位置都可
+    let minIndex; // 记录下最小值下标
+    list.forEach((el, index) =&gt; { // 对 list 循环，查找当前 list 最小值
+      if(el &lt; min) {
+        min = el;
+        minIndex = index;
+      }
+    });
+    newList.push(list[minIndex]); // 将 最小值下标 对应的值 push 进数组
+    list.splice(minIndex, 1); // 从list内删除这个值
+  }
+  return newList
+}
+复制代码
+</code></pre></div><h4 id="优劣"><a href="#优劣" aria-hidden="true" class="header-anchor">#</a> 优劣</h4> <p>优点：</p> <ul><li>上手比较简单，比较符合人的正常思路逻辑。</li></ul> <p>缺点：</p> <ul><li>时间复杂度O(n^2)，运算速度很慢，当数组元素个数比较多时，时间增速惊人。</li></ul> <hr> <h3 id="桶排序"><a href="#桶排序" aria-hidden="true" class="header-anchor">#</a> 桶排序</h3> <h4 id="原理-2"><a href="#原理-2" aria-hidden="true" class="header-anchor">#</a> 原理</h4> <p>桶排序顾名思义，就是准备好一些“桶”，然后将待排序的数组值一个个放入对应的“桶内”，全部元素放入”桶“后，然后展开”桶“就得到了排序完成的数组了。比如：当前需要排序的数组 [8, 3, 5, 9, 2, 3, 0, 8]，我们可以准备一个长度为10的数组，每一项的值为0，我们对需要排序的数组开始便利，当我们遇到8时，我们将newList[8]内的0，加1，改成1；然后下一个3，我们将newList[3]内的0，加1，改成1...，处理完所有元素后，将newList便利输出就得到了排序好的数组了。当然了这里只是简单的对桶排序的介绍，真正的桶排序肯定比这个复杂。</p> <h4 id="代码实现-2"><a href="#代码实现-2" aria-hidden="true" class="header-anchor">#</a> 代码实现</h4> <div class="language- extra-class"><pre class="language-text"><code>const list = [8, 3, 5, 9, 2, 3, 0, 8]; // 待排序数组
+
+/**
+ * params {number[]} list
+ * return {number[]}
+ */
+function sort(list) {
+  const newList = Array.from({length: 10}).fill(0); // 创建 [0, 0, ..., 0] 的数组，长度为10
+  list.forEach(el =&gt; newList[el] += 1); // 把数组元素记录在 newList 上
+  return newList.reduce((pre, el, index) =&gt; { // 展开数组
+    for(let i = el; i; i--) {
+      pre.push(index)
+    }
+    return pre;
+  }, [])
+}
+复制代码
+</code></pre></div><h4 id="优劣-2"><a href="#优劣-2" aria-hidden="true" class="header-anchor">#</a> 优劣</h4> <p>优点：</p> <ul><li>时间复杂度只有O(m+n)，计算效率高</li></ul> <p>缺点：</p> <ul><li>空间消耗比较大</li> <li>需要提前知道最大值，最小值</li></ul> <hr> <h3 id="冒泡排序"><a href="#冒泡排序" aria-hidden="true" class="header-anchor">#</a> 冒泡排序</h3> <h4 id="原理-3"><a href="#原理-3" aria-hidden="true" class="header-anchor">#</a> 原理</h4> <p>冒泡排序我先介绍说它的原理，你就明白它为什么叫冒泡排序了。有一个待排序的数组 [8, 3, 5, 9, 2, 3, 0, 8] ，需要由小到大排序。我们只需要把小的放在左边，大的放右边是不是就完成了排序呢？显然是的。将第一个 8 与 第二位 3 比较，8 大于 3，所以我们把8往右放，即将 8 与 3 更换位置，更换后的数组是 [<strong>3</strong>, <strong>8</strong>, 5, 9, 2, 3, 0, 8] ，继续比较改变后的数组第二位 8 与 第三位 5 比较，8 大于 5，更换后的数组是 [3, <strong>5</strong>, <strong>8</strong>, 9, 2, 3, 0, 8]，重复这样的操作，如果遇到相同或者当前数值小于后一位的则不需要改变，继续比较下一位即可。所以看这 8 的移动轨迹，像不像是一个气泡在往上冒，所以这个排序方法就叫冒泡排序。</p> <h4 id="代码实现-3"><a href="#代码实现-3" aria-hidden="true" class="header-anchor">#</a> 代码实现</h4> <div class="language- extra-class"><pre class="language-text"><code>/**
+ * params {number[]} list
+ * return {number[]}
+ */
+function sort(list) {
+  list = [...list];
+  let length = list.length;
+  while(length--) {
+    for(let i = 0; i &lt; length; i++) {
+      const current = list[i];
+      const next = list[i + 1];
+      if(current &gt; next) {
+        [list[i], list[i + 1]] = [next, current];
+      }
+    }
+  }
+  return list;
+}
+复制代码
+</code></pre></div><h4 id="优劣-3"><a href="#优劣-3" aria-hidden="true" class="header-anchor">#</a> 优劣</h4> <p>优点：</p> <ul><li>没啥优点吧，我不清楚哈，欢迎赐教。</li></ul> <p>缺点：</p> <ul><li>时间复杂度O(n^2)，计算慢。</li></ul> <hr> <h3 id="快速排序"><a href="#快速排序" aria-hidden="true" class="header-anchor">#</a> 快速排序</h3> <blockquote><p>中心思想是用二分实现的快速排序，能够很快的完成排序任务，也是我比较推荐的一种排序方式。</p></blockquote> <h4 id="原理-4"><a href="#原理-4" aria-hidden="true" class="header-anchor">#</a> 原理</h4> <p>快速排序的优点就是速度快，为什么速度快呢？我先介绍一下快速排序的原理。选择一个基准值，一般选择数组的一个值，遍历数组，大的放右边，小的放左边，一样大的放中间（哈哈哈哈哈😀），利用递归重复对大的数组和小的数组进行拆分，最后得出排序后的数组。</p> <h4 id="代码实现-4"><a href="#代码实现-4" aria-hidden="true" class="header-anchor">#</a> 代码实现</h4> <div class="language- extra-class"><pre class="language-text"><code>function quickSort(arr) {
+  if(arr.length &lt; 2) {
+    return arr;
+  } else {
+    const pivot = arr[0]; // 基准值
+    const pivotArr = []; // 一样大的放中间
+    const lowArr= []; // 小的放左边
+    const hightArr = []; // 大的放右边
+    arr.forEach(current =&gt; {
+      if(current === pivot) pivotArr.push(current);
+      else if(current &gt; pivot) hightArr.push(current);
+      else lowArr.push(current);
+    })
+    return quickSort(lowArr).concat(pivotArr).concat(quickSort(hightArr));
+  }
+}
+复制代码
+</code></pre></div><h4 id="优劣-4"><a href="#优劣-4" aria-hidden="true" class="header-anchor">#</a> 优劣</h4> <p>优点：</p> <ul><li>速度快，O(n*log n)</li></ul> <p>缺点：</p> <ul><li></li></ul></div> <div class="page-edit"><div class="edit-link"><a href="https://github.com/thisliuyang/javascript-tutorial/edit/master/docs/08-express.md" target="_blank" rel="noopener noreferrer">在 GitHub 上编辑此页</a> <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></div> <div class="last-updated"><span class="prefix">上次更新: </span> <span class="time">9/15/2019, 1:31:32 PM</span></div></div> <div class="page-nav"><p class="inner"><span class="prev">
+        ←
+        <a href="/07-web.html" class="prev">
+          数组的几个不 low 操作
+        </a></span> <span class="next"><a href="/09-db.html">
+          window 对象
+        </a>
+        →
+      </span></p></div> </div> <!----></div></div>
+    <script src="/assets/js/app.fa27fcb7.js" defer></script><script src="/assets/js/11.63165319.js" defer></script>
+  </body>
+</html>
